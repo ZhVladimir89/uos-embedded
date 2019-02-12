@@ -1,0 +1,17 @@
+
+#Qt-Creator
+*.config
+*.creator
+*.creator.user
+*.files
+*.includes
+
+#C/C++ output
+*.a
+*.o
+*.dep
+
+#Examples
+examples/*/*.elf
+examples/*/*.bin
+examples/*/*.dis
