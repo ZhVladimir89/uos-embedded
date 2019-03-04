@@ -39,7 +39,7 @@ void task (void *arg)
 
     int cycle = 0;
     for (;;) {
-        int nb_rec = can_input( canif, frame, FRAMES_CNT );
+        int nb_rec = can_input( canif, frame, FRAMES_CNT, 0 );
         for (i = 0; i < nb_rec; ++i) {
             debug_printf("Received frame, id 0x%X%s%s, data: [", frame[i].id & CAN_ID_MASK,
                 (frame[i].id & CAN_ID_RTR) ? " RTR":"", (frame[i].id & CAN_ID_EXT) ? " IDE":"");

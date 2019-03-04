@@ -32,10 +32,12 @@
 #define CMD_SR                  0x99    // Software Reset
 #define CMD_RDID                0x9F    // Read ID (JEDEC Manufacturer ID and JEDEC CFI) 
 #define CMD_RES                 0xAB    // Release from Deep-Power-Down / Device ID
+#define CMD_E4ADDR              0xB7    // Enable 4-bytes address mode
 #define CMD_DPD                 0xB9    // Deep-Power-Down
 #define CMD_DIOR                0xBB    // Dual I/O Read
 #define CMD_CE_2                0xC7    // Chip Erase (alternate command)
 #define CMD_E64K                0xD8    // Block Erase 64 kB
+#define CMD_D4ADDR              0xE9    // Disable 4-bytes address mode
 #define CMD_QIOR                0xEB    // Quad I/O Read
 #define CMD_CRMR                0xFF    // Continuous Read Mode Reset
 
@@ -69,43 +71,6 @@
 #define SR3_W6                  (1 << 6) // Burst Wrap Length 1
 #define SR3_RFU                 (1 << 7) // Reserved
 
-static int generic25_flash_connect(flashif_t *flash)
-{
-  generic25_flash_t *m = (generic25_flash_t *) flash;
-
-  mutex_lock(&flash->lock);
-
-  m->databuf[0] = CMD_RDID;
-  m->msg.tx_data = m->databuf;
-  m->msg.rx_data = 0;
-  m->msg.word_count = 1;
-  m->msg.mode |= SPI_MODE_CS_HOLD;
-  spim_trx(m->spi, &m->msg);
-
-  m->msg.tx_data = 0;
-  m->msg.rx_data = m->databuf;
-  m->msg.word_count = 3;
-  m->msg.mode &= ~SPI_MODE_CS_HOLD;
-  spim_trx(m->spi, &m->msg);
-  
-  // проверка ID производителя и ID микросхемы
-  /*
-  if ((m->databuf[0] != 0xEF) || (m->databuf[1] != 0x40)) {
-    mutex_unlock(&flash->lock);
-    return FLASH_ERR_NOT_CONN;
-  }
-  */
-
-  uint32_t size = 1 << m->databuf[2];
-  flash->nb_sectors = size / ( 4*1024 );
-  flash->page_size = 256;
-  flash->nb_pages_in_sector = 16;
-    
-  flash->min_address = 0;
-
-  mutex_unlock(&flash->lock);
-  return FLASH_ERR_OK;
-}
 
 static int enable_write(generic25_flash_t *m)
 {
@@ -117,6 +82,65 @@ static int enable_write(generic25_flash_t *m)
     if (spim_trx(m->spi, &m->msg) == SPI_ERR_OK)
         return FLASH_ERR_OK;
     else return FLASH_ERR_IO;
+}
+
+static int generic25_flash_connect(flashif_t *flash)
+{
+    generic25_flash_t *m = (generic25_flash_t *) flash;
+
+    mutex_lock(&flash->lock);
+
+    m->databuf[0] = CMD_RDID;
+    m->msg.tx_data = m->databuf;
+    m->msg.rx_data = 0;
+    m->msg.word_count = 1;
+    m->msg.mode |= SPI_MODE_CS_HOLD;
+    if (spim_trx(m->spi, &m->msg) != SPI_ERR_OK)
+        return FLASH_ERR_IO;
+
+    m->msg.tx_data = 0;
+    m->msg.rx_data = m->databuf;
+    m->msg.word_count = 3;
+    m->msg.mode &= ~SPI_MODE_CS_HOLD;
+    if (spim_trx(m->spi, &m->msg) != SPI_ERR_OK)
+        return FLASH_ERR_IO;
+
+    // проверка ID производителя и ID микросхемы
+    /*
+    if ((m->databuf[0] != 0xEF) || (m->databuf[1] != 0x40)) {
+    mutex_unlock(&flash->lock);
+    return FLASH_ERR_NOT_CONN;
+    }
+    */
+
+    uint32_t size = 1 << m->databuf[2];
+    flash->nb_sectors = size / ( 4*1024 );
+    flash->page_size = 256;
+    flash->nb_pages_in_sector = 16;
+
+    flash->min_address = 0;
+    
+    if (flash_size(flash) > 16 * 1024 * 1024) {
+        int res;
+        
+        res = enable_write(m);
+        if (res != FLASH_ERR_OK) {
+            mutex_unlock(&flash->lock);
+            return res;
+        }
+        
+        m->databuf[0] = CMD_E4ADDR;
+        m->msg.tx_data = m->databuf;
+        m->msg.rx_data = 0;
+        m->msg.word_count = 1;
+        if (spim_trx(m->spi, &m->msg) != SPI_ERR_OK)
+            return FLASH_ERR_IO;
+        
+        m->addr4bytes = 1;
+    }
+
+    mutex_unlock(&flash->lock);
+    return FLASH_ERR_OK;
 }
 
 static int read_sr1(generic25_flash_t *m, uint8_t *sr1)
@@ -154,7 +178,7 @@ static int generic25_flash_erase_all(flashif_t *flash)
         return res;
     }
     
-    m->databuf[0] = CMD_CE_1;
+    m->databuf[0] = CMD_CE_2;
     m->msg.tx_data = m->databuf;
     m->msg.rx_data = 0;
     m->msg.word_count = 1;
@@ -177,44 +201,52 @@ static int generic25_flash_erase_all(flashif_t *flash)
     return FLASH_ERR_OK;
 }
 
-static int erase_4k(flashif_t *flash, unsigned sector_num)  {
+static int erase_4k(flashif_t *flash, unsigned sector_num)
+{
+    int res;
+    uint8_t status;
+    generic25_flash_t *m = (generic25_flash_t *) flash;
 
-  int res;
-  uint8_t status;
-  generic25_flash_t *m = (generic25_flash_t *) flash;
+    res = enable_write(m);
+    if (res != FLASH_ERR_OK) {
+        mutex_unlock(&flash->lock);
+        return res;
+    }
 
-  res = enable_write(m);
-  if (res != FLASH_ERR_OK) {
-    mutex_unlock(&flash->lock);
-    return res;
-  }
+    uint32_t address = sector_num * 4 *1024;
+    uint8_t* p = (uint8_t *) &address;
+    m->databuf[0] = CMD_E4K;
+    if (m->addr4bytes) {
+        m->databuf[1] = p[3];
+        m->databuf[2] = p[2];
+        m->databuf[3] = p[1];
+        m->databuf[4] = p[0];
+        m->msg.word_count = 5;
+    } else {
+        m->databuf[1] = p[2];
+        m->databuf[2] = p[1];
+        m->databuf[3] = p[0];
+        m->msg.word_count = 4;
+    }
+    m->msg.tx_data = m->databuf;
+    m->msg.rx_data = 0;
+    m->msg.mode &= ~SPI_MODE_CS_HOLD;
+    if (spim_trx(m->spi, &m->msg) != SPI_ERR_OK) {
+        mutex_unlock(&flash->lock);
+        return FLASH_ERR_IO;
+    }
 
-  uint32_t address = sector_num * 4 *1024;
-  uint8_t* p = (uint8_t *) &address;
-  m->databuf[0] = CMD_E4K;
-  m->databuf[1] = p[2];
-  m->databuf[2] = p[1];
-  m->databuf[3] = p[0];
-  m->msg.tx_data = m->databuf;
-  m->msg.rx_data = 0;
-  m->msg.word_count = 4;
-  m->msg.mode &= ~SPI_MODE_CS_HOLD;
-  if (spim_trx(m->spi, &m->msg) != SPI_ERR_OK) {
-      mutex_unlock(&flash->lock);
-      return FLASH_ERR_IO;
-  }
+    while (1) {
+        res = read_sr1(m, &status);
+        if (res != FLASH_ERR_OK) {
+            mutex_unlock(&flash->lock);
+            return res;
+        }
 
-  while (1) {
-      res = read_sr1(m, &status);
-      if (res != FLASH_ERR_OK) {
-          mutex_unlock(&flash->lock);
-          return res;
-      }
+        if (! (status & SR1_BUSY)) break;
+    }
 
-      if (! (status & SR1_BUSY)) break;
-  }
-
-  return FLASH_ERR_OK;
+    return FLASH_ERR_OK;
 }
 
 /*
@@ -233,12 +265,20 @@ static int erase_64k(flashif_t *flash, unsigned sector_num)
     uint32_t address = sector_num * 64 * 1024;
     uint8_t *p = (uint8_t *) &address;
     m->databuf[0] = CMD_E64K;
-    m->databuf[1] = p[2];
-    m->databuf[2] = p[1];
-    m->databuf[3] = p[0];
+    if (m->addr4bytes) {
+        m->databuf[1] = p[3];
+        m->databuf[2] = p[2];
+        m->databuf[3] = p[1];
+        m->databuf[3] = p[0];
+        m->msg.word_count = 5;
+    } else {
+        m->databuf[1] = p[2];
+        m->databuf[2] = p[1];
+        m->databuf[3] = p[0];
+        m->msg.word_count = 4;
+    }
     m->msg.tx_data = m->databuf;
     m->msg.rx_data = 0;
-    m->msg.word_count = 4;
     m->msg.mode &= ~SPI_MODE_CS_HOLD;
     if (spim_trx(m->spi, &m->msg) != SPI_ERR_OK) {
         mutex_unlock(&flash->lock);
@@ -285,12 +325,20 @@ static int write_one_page(flashif_t *flash, unsigned address,
 
     uint8_t *p = (uint8_t *) &address;
     m->databuf[0] = CMD_PP;
-    m->databuf[1] = p[2];
-    m->databuf[2] = p[1];
-    m->databuf[3] = p[0];
+    if (m->addr4bytes) {
+        m->databuf[1] = p[3];
+        m->databuf[2] = p[2];
+        m->databuf[3] = p[1];
+        m->databuf[4] = p[0];
+        m->msg.word_count = 5;
+    } else {
+        m->databuf[1] = p[2];
+        m->databuf[2] = p[1];
+        m->databuf[3] = p[0];
+        m->msg.word_count = 4;
+    }
     m->msg.tx_data = m->databuf;
     m->msg.rx_data = 0;
-    m->msg.word_count = 4;
     m->msg.mode |= SPI_MODE_CS_HOLD;
     if (spim_trx(m->spi, &m->msg) != SPI_ERR_OK)
         return FLASH_ERR_IO;
@@ -318,12 +366,20 @@ static int read_one_page(flashif_t *flash, unsigned address,
 
     uint8_t *p = (uint8_t *) &address;
     m->databuf[0] = CMD_READ;
-    m->databuf[1] = p[2];
-    m->databuf[2] = p[1];
-    m->databuf[3] = p[0];
+    if (m->addr4bytes) {
+        m->databuf[1] = p[3];
+        m->databuf[2] = p[2];
+        m->databuf[3] = p[1];
+        m->databuf[4] = p[0];
+        m->msg.word_count = 5;
+    } else {
+        m->databuf[1] = p[2];
+        m->databuf[2] = p[1];
+        m->databuf[3] = p[0];
+        m->msg.word_count = 4;
+    }
     m->msg.tx_data = m->databuf;
     m->msg.rx_data = 0;
-    m->msg.word_count = 4;
     m->msg.mode |= SPI_MODE_CS_HOLD;
     if (spim_trx(m->spi, &m->msg) != SPI_ERR_OK)
         return FLASH_ERR_IO;
@@ -344,27 +400,27 @@ typedef int (* io_func)(flashif_t *flash, unsigned address,
 static int cyclic_func(flashif_t *flash, unsigned address, 
                         void *data, unsigned size, io_func func)
 {
-  int res;
-  unsigned cur_size = size;
-  uint8_t *cur_data = data;
-    
-  mutex_lock(&flash->lock);
-    
-  while (size > 0) {
-    cur_size = (size < flash_page_size(flash)) ?
-        size : flash_page_size(flash);
-    res = func(flash, address, cur_data, cur_size);
-    if (res != FLASH_ERR_OK) {
-      mutex_unlock(&flash->lock);
-      return res;
+    int res;
+    unsigned cur_size = size;
+    uint8_t *cur_data = data;
+
+    mutex_lock(&flash->lock);
+
+    while (size > 0) {
+        cur_size = (size < flash_page_size(flash)) ?
+            size : flash_page_size(flash);
+        res = func(flash, address, cur_data, cur_size);
+        if (res != FLASH_ERR_OK) {
+            mutex_unlock(&flash->lock);
+            return res;
+        }
+        size -= cur_size;
+        address += cur_size;
+        cur_data += cur_size;
     }
-    size -= cur_size;
-    address += cur_size;
-    cur_data += cur_size;
-  }
-    
-  mutex_unlock(&flash->lock);
-  return FLASH_ERR_OK;
+
+    mutex_unlock(&flash->lock);
+    return FLASH_ERR_OK;
 }
 
 static int generic25_flash_write(flashif_t *flash, unsigned page_num, unsigned offset,

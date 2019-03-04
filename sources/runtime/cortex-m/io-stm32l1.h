@@ -219,7 +219,7 @@ typedef struct
 
 #define PWR     ((PWR_t *) STM_PWR_BASE)
 
-// CR values
+// CR bits
 #define PWR_LPRUN           (1 << 14)
 #define PWR_VOS_1_8         (1 << 11)
 #define PWR_VOS_1_5         (2 << 11)
@@ -242,7 +242,7 @@ typedef struct
 #define PWR_PDDS            (1 << 1)
 #define PWR_LPSDSR          (1 << 0)
 
-// CSR values
+// CSR bits
 #define PWR_EWUP3           (1 << 10)
 #define PWR_EWUP2           (1 << 9)
 #define PWR_EWUP1           (1 << 8)
@@ -277,7 +277,7 @@ typedef struct
 
 #define RCC     ((RCC_t *) STM_RCC_BASE)
 
-// CR values
+// CR bits
 #define RCC_RTCPRE_DIV2         (0 << 30)
 #define RCC_RTCPRE_DIV4         (1 << 30)
 #define RCC_RTCPRE_DIV8         (2 << 30)
@@ -307,7 +307,7 @@ typedef struct
 #define RCC_HSITRIM(n)          ((n) << 8)
 #define RCC_HSICAL(n)           ((n))
 
-// CFGR values
+// CFGR bits
 #define RCC_MCOPRE_NODIV        (0 << 28)
 #define RCC_MCOPRE_DIV2         (1 << 28)
 #define RCC_MCOPRE_DIV4         (2 << 28)
@@ -349,7 +349,7 @@ typedef struct
 #define RCC_SW_PLL              (3 << 0)
 #define RCC_SW_MASK             (3 << 0)
 
-// CIR values
+// CIR bits
 #define RCC_CSSC                (1 << 23)
 #define RCC_LSECSSC             (1 << 22)
 #define RCC_MSIRDYC             (1 << 21)
@@ -374,7 +374,7 @@ typedef struct
 #define RCC_LSERDYF             (1 << 1)
 #define RCC_LSIRDYF             (1 << 0)
 
-// AHBRSTR values
+// AHBRSTR bits
 #define RCC_FSMCRST             (1 << 30)
 #define RCC_AESRST              (1 << 27)
 #define RCC_DMA2RST             (1 << 25)
@@ -390,7 +390,7 @@ typedef struct
 #define RCC_GPIOBRST            (1 << 1)
 #define RCC_GPIOARST            (1 << 0)
 
-// APB2RSTR values
+// APB2RSTR bits
 #define RCC_USART1RST           (1 << 14)
 #define RCC_SPI1RST             (1 << 12)
 #define RCC_SDIORST             (1 << 11)
@@ -400,7 +400,7 @@ typedef struct
 #define RCC_TIM9RST             (1 << 2)
 #define RCC_SYSCFGRST           (1 << 0)
 
-// APB1RSTR values
+// APB1RSTR bits
 #define RCC_COMPRST             (1 << 31)
 #define RCC_DACRST              (1 << 29)
 #define RCC_PWRRST              (1 << 28)
@@ -422,7 +422,7 @@ typedef struct
 #define RCC_TIM3RST             (1 << 1)
 #define RCC_TIM2RST             (1 << 0)
 
-// AHBENR values
+// AHBENR bits
 #define RCC_FSMCEN              (1 << 30)
 #define RCC_AESEN               (1 << 27)
 #define RCC_DMA2EN              (1 << 25)
@@ -438,7 +438,7 @@ typedef struct
 #define RCC_GPIOBEN             (1 << 1)
 #define RCC_GPIOAEN             (1 << 0)
 
-// APB2ENR values
+// APB2ENR bits
 #define RCC_USART1EN           (1 << 14)
 #define RCC_SPI1EN             (1 << 12)
 #define RCC_SDIOEN             (1 << 11)
@@ -448,7 +448,7 @@ typedef struct
 #define RCC_TIM9EN             (1 << 2)
 #define RCC_SYSCFGEN           (1 << 0)
 
-// APB1ENR values
+// APB1ENR bits
 #define RCC_COMPEN             (1 << 31)
 #define RCC_DACEN              (1 << 29)
 #define RCC_PWREN              (1 << 28)
@@ -470,7 +470,7 @@ typedef struct
 #define RCC_TIM3EN             (1 << 1)
 #define RCC_TIM2EN             (1 << 0)
 
-// AHBLPENR values
+// AHBLPENR bits
 #define RCC_FSMCLPEN           (1 << 30)
 #define RCC_AESLPEN            (1 << 27)
 #define RCC_DMA2LPEN           (1 << 25)
@@ -487,7 +487,7 @@ typedef struct
 #define RCC_GPIOBLPEN          (1 << 1)
 #define RCC_GPIOALPEN          (1 << 0)
 
-// APB2LPENR values
+// APB2LPENR bits
 #define RCC_USART1LPEN         (1 << 14)
 #define RCC_SPI1LPEN           (1 << 12)
 #define RCC_SDIOLPEN           (1 << 11)
@@ -497,7 +497,7 @@ typedef struct
 #define RCC_TIM9LPEN           (1 << 2)
 #define RCC_SYSCFGLPEN         (1 << 0)
 
-// APB1LPENR values
+// APB1LPENR bits
 #define RCC_COMPLPEN           (1 << 31)
 #define RCC_DACLPEN            (1 << 29)
 #define RCC_PWRLPEN            (1 << 28)
@@ -519,7 +519,7 @@ typedef struct
 #define RCC_TIM3LPEN           (1 << 1)
 #define RCC_TIM2LPEN           (1 << 0)
 
-// CSR values
+// CSR bits
 #define RCC_LPWRRSTF            (1 << 31)
 #define RCC_WWDGRSTF            (1 << 30)
 #define RCC_IWDGRSTF            (1 << 29)
@@ -565,14 +565,14 @@ typedef struct
 
 #define FLASH     ((FLASH_t*) STM_FLASH_IFACE_BASE)
 
-// ACR values
+// ACR bits
 #define FLASH_RUN_PD            (1 << 4)
 #define FLASH_SLEEP_PD          (1 << 3)
 #define FLASH_ACC64             (1 << 2)
 #define FLASH_PRFTEN            (1 << 1)
 #define FLASH_LATENCY(n)        (n)
 
-// PECR values
+// PECR bits
 #define FLASH_OBL_LAUNCH        (1 << 18)
 #define FLASH_ERRIE             (1 << 17)
 #define FLASH_EOPIE             (1 << 16)
@@ -586,23 +586,23 @@ typedef struct
 #define FLASH_PRGLOCK           (1 << 1)
 #define FLASH_PELOCK            (1 << 0)
 
-// PDKEYR values
+// PDKEYR bits
 #define FLASH_PDKEY1            0x04152637
 #define FLASH_PDKEY2            0xFAFBFCFD
 
-// PEKEYR values
+// PEKEYR bits
 #define FLASH_PEKEY1            0x89ABCDEF
 #define FLASH_PEKEY2            0x02030405
 
-// PRGKEYR values
+// PRGKEYR bits
 #define FLASH_PRGKEY1           0x8C9DAEBF
 #define FLASH_PRGKEY2           0x13141516
 
-// OPTKEYR values
+// OPTKEYR bits
 #define FLASH_OPTKEY1           0xFBEAD9C8
 #define FLASH_OPTKEY2           0x24252627
 
-// SR values
+// SR bits
 #define FLASH_RDERR             (1 << 13)
 #define FLASH_OPTVERRUSR        (1 << 12)
 #define FLASH_OPTVERR           (1 << 11)
@@ -615,7 +615,7 @@ typedef struct
 #define FLASH_EOP               (1 << 1)
 #define FLASH_BSY               (1 << 0)
 
-// OBR values
+// OBR bits
 #define FLASH_nBFB2             (1 << 23)
 #define FLASH_nRST_STDBY        (1 << 22)
 #define FLASH_nRST_STOP         (1 << 21)
@@ -653,7 +653,7 @@ typedef struct
 
 #define OB     ((OB_t*) STM_OB_BASE)
 
-// RDP values
+// RDP bits
 #define OB_RDP_ALWAYS_ONES      0xFE000000
 #define OB_nSPRMOD              (1 << 24)
 #define OB_nRDP(x)              ((x) << 16)
@@ -662,7 +662,7 @@ typedef struct
 #define OB_RDP_LEVEL0           0xAA
 #define OB_RDP_LEVEL2           0xCC
 
-// USER values
+// USER bits
 // nUSER field
 #define OB_BFB2                 (1 << 23)
 #define OB_RST_STDBY            (1 << 22)
@@ -703,7 +703,7 @@ typedef struct
 
 #define CRC         ((CRC_t*) STM_CRC_BASE)
 
-// CRC_CR values
+// CRC_CR bits
 #define CRC_RESET       (1 << 0)
 
 
@@ -735,38 +735,38 @@ typedef struct
 #define GPIOH       ((GPIO_t*) STM_GPIOH_BASE)
 #define GPIOI       ((GPIO_t*) STM_GPIOI_BASE)
 
-// MODER values
+// MODER bits
 #define GPIO_IN(n)          (0 << (2 * n))  // Input mode
 #define GPIO_OUT(n)         (1 << (2 * n))  // General purpose output mode
 #define GPIO_ALT(n)         (2 << (2 * n))  // Alternate function mode
 #define GPIO_ANA(n)         (3 << (2 * n))  // Analog mode
 #define GPIO_MODE_MASK(n)   (3 << (2 * n))  // Mask
 
-// OTYPER values
+// OTYPER bits
 #define GPIO_PP(n)      (0 << (n))      // Push-pull
 #define GPIO_OD(n)      (1 << (n))      // Open drain
 
-// OSPEEDR values
+// OSPEEDR bits
 #define GPIO_2MHz(n)        (0 << (2 * n))  // Low speed
 #define GPIO_25MHz(n)       (1 << (2 * n))  // Medium speed
 #define GPIO_50MHz(n)       (2 << (2 * n))  // Fast speed
 #define GPIO_100MHz(n)      (3 << (2 * n))  // High speed
 #define GPIO_OSPEED_MASK(n) (3 << (2 * n))  // Field mask
 
-// PUPDR values
+// PUPDR bits
 #define GPIO_NO_PULL(n)   (0 << (2 * n))  // No pull-up, no pull-down
 #define GPIO_PULL_UP(n)   (1 << (2 * n))  // Pull-up
 #define GPIO_PULL_DOWN(n) (2 << (2 * n))  // Pull-down
 
-// BSRR values
+// BSRR bits
 #define GPIO_SET(n)     (1 << (n))      // Atomic set n-th bit of ODR
 #define GPIO_RESET(n)   (1 << (n + 16)) // Atomic reset n-th bit of ODR
 
-// LCKR values
+// LCKR bits
 #define GPIO_LCK(n)     (1 << (n))      // Pin configuration lock
 #define GPIO_LCKK(n)    (1 << 16)       // Port configuration lock key
 
-// Alternate functions (AFRL and AFRH values)
+// Alternate functions (AFRL and AFRH bits)
 #define GPIO_AF_SYSTEM(n)   (0x0 << (4 * ((n) & 7)))
 #define GPIO_AF_TIM1(n)     (0x1 << (4 * ((n) & 7)))
 #define GPIO_AF_TIM2(n)     (0x1 << (4 * ((n) & 7)))
@@ -820,16 +820,16 @@ typedef struct
 
 #define SYSCFG      ((SYSCFG_t*) STM_SYSCFG_BASE)
 
-// SYSCFG_MEMRMP values
+// SYSCFG_MEMRMP bits
 #define SYSCFG_BOOT_MAIN_FLASH      (0 << 8)
 #define SYSCFG_BOOT_SYSTEM_FLASH    (1 << 8)
 #define SYSCFG_BOOT_EMB_SRAM        (3 << 8)
-#define SYSCFG_MEM_MAIN_FLASH       (0 << 8)
-#define SYSCFG_MEM_SYSTEM_FLASH     (1 << 8)
-#define SYSCFG_MEM_FSMC             (2 << 8)
-#define SYSCFG_MEM_SRAM             (3 << 8)
+#define SYSCFG_MEM_MAIN_FLASH       (0 << 0)
+#define SYSCFG_MEM_SYSTEM_FLASH     (1 << 0)
+#define SYSCFG_MEM_FSMC             (2 << 0)
+#define SYSCFG_MEM_SRAM             (3 << 0)
 
-// SYSCFG_PMC values
+// SYSCFG_PMC bits
 #define SYSCFG_LCD_CAPA_PE12        (1 << 5)
 #define SYSCFG_LCD_CAPA_PE11        (1 << 4)
 #define SYSCFG_LCD_CAPA_PB0         (1 << 3)
@@ -837,7 +837,7 @@ typedef struct
 #define SYSCFG_LCD_CAPA_PB2         (1 << 1)
 #define SYSCFG_USB_PU               (1 << 0)
 
-// SYSCFG_EXTICRx values
+// SYSCFG_EXTICRx bits
 #define SYSCFG_PA(x)                (0 << (((x) & 3) * 4))
 #define SYSCFG_PB(x)                (1 << (((x) & 3) * 4))
 #define SYSCFG_PC(x)                (2 << (((x) & 3) * 4))
@@ -1072,7 +1072,7 @@ typedef struct
 
 #define DAC   ((DAC_t*) STM_DAC_BASE)
 
-// DAC_CR values
+// DAC_CR bits
 #define DMA_DMAUDRIE2           (1 << 29)
 #define DMA_DMAEN2              (1 << 28)
 #define DMA_MAMP2(n)            ((n) << 24)
@@ -1090,11 +1090,11 @@ typedef struct
 #define DMA_BOFF1               (1 << 1)
 #define DMA_EN1                 (1 << 0)
 
-// DAC_SWTRIGR values
+// DAC_SWTRIGR bits
 #define DAC_SWTRIG2             (1 << 1)
 #define DAC_SWTRIG1             (1 << 0)
 
-// DAC_SR values
+// DAC_SR bits
 #define DAC_DMAUDR2             (1 << 29)
 #define DAC_DMAUDR1             (1 << 13)
 
@@ -1109,7 +1109,7 @@ typedef struct
 
 #define COMP   ((COMP_t*) STM_COMP_BASE)
 
-// COMP_CSR values
+// COMP_CSR bits
 #define COMP_TSUSP                  (1 << 31)
 #define COMP_CAIF                   (1 << 30)
 #define COMP_CAIE                   (1 << 29)
@@ -1552,7 +1552,7 @@ typedef struct
 
 #define RTC   ((RTC_t*) STM_RTC_BKP_BASE)
 
-// TR, TSTR values
+// TR, TSTR bits
 #define RTC_PM          (1 << 22)
 #define RTC_HT(x)       ((x) << 20)
 #define RTC_GET_HT(r)   (((r) >> 20) & 0x3)
@@ -1567,7 +1567,7 @@ typedef struct
 #define RTC_SU(x)       ((x))
 #define RTC_GET_SU(r)   (((r)) & 0xF)
 
-// DR, TSDR (low 16 bits) values
+// DR, TSDR (low 16 bits) bits
 #define RTC_YT(x)       ((x) << 20)
 #define RTC_GET_YT(r)   (((r) >> 20) & 0xF)
 #define RTC_YU(x)       ((x) << 16)
@@ -1590,7 +1590,7 @@ typedef struct
 #define RTC_DU(x)       ((x))
 #define RTC_GET_DU(r)   (((r)) & 0xF)
 
-// CR values
+// CR bits
 #define RTC_COE         (1 << 23)
 #define RTC_OSEL(x)     ((x) << 21)
 #define RTC_POL         (1 << 20)
@@ -1618,7 +1618,7 @@ typedef struct
 #define RTC_WUCKSEL_CK_SPRE         4
 #define RTC_WUCKSEL_CK_SPRE_ADDED   6
 
-// ISR values
+// ISR bits
 #define RTC_RECALPF     (1 << 16)
 #define RTC_TAMP3F      (1 << 15)
 #define RTC_TAMP2F      (1 << 14)
@@ -1637,15 +1637,15 @@ typedef struct
 #define RTC_ALRBWF      (1 << 1)
 #define RTC_ALRAWF      (1 << 0)
 
-// PRER values
+// PRER bits
 #define RTC_PREDIV_A(x) ((x) << 16)
 #define RTC_PREDIV_S(x) ((x))
 
-// CALIBR values
+// CALIBR bits
 #define RTC_DCS         (1 << 7)
 #define RTC_DC(x)       ((x))
 
-// ALRMAR, ALRMBR values
+// ALRMAR, ALRMBR bits
 #define RTC_ALRM_MSK4   (1 << 31)
 #define RTC_ALRM_WDSEL  (1 << 30)
 #define RTC_ALRM_DT(x)  ((x) << 28)
@@ -1661,17 +1661,17 @@ typedef struct
 #define RTC_ALRM_ST(x)  ((x) << 4)
 #define RTC_ALRM_SU(x)  ((x) << 0)
 
-// SHIFTR values
+// SHIFTR bits
 #define RTC_ADD1S       (1 << 31)
 #define RTC_SUBFS(x)    ((x) << 0)
 
-// CALR values
+// CALR bits
 #define RTC_CALP        (1 << 15)
 #define RTC_CALW8       (1 << 14)
 #define RTC_CALW16      (1 << 13)
 #define RTC_CALM(x)     (x)
 
-// TAFCR values
+// TAFCR bits
 #define RTC_ALARMOUTTYPE    (1 << 18)
 #define RTC_TAMPPUDIS       (1 << 15)
 #define RTC_TAMPPRCH(x)     ((x) << 13)
@@ -1686,7 +1686,7 @@ typedef struct
 #define RTC_TAMP1TRG        (1 << 1)
 #define RTC_TAMP1E          (1 << 0)
 
-// ALRMASSR, ALRMASSR values
+// ALRMASSR, ALRMASSR bits
 #define RTC_MASKSS(x)       ((x) << 24)
 #define RTC_SS(x)           ((x) & 0x7FFF)
 
@@ -1704,12 +1704,12 @@ typedef struct
 
 #define IWDG   ((IWDG_t*) STM_IWDG_BASE)
 
-// IWDG_KR values
+// IWDG_KR bits
 #define IWDG_ALIVE_KEY      0xAAAA
 #define IWDG_ACCESS_KEY     0x5555
 #define IWDG_START_KEY      0xCCCC
 
-// IWDG_PR values
+// IWDG_PR bits
 #define IWDG_PR_DIV_4       0
 #define IWDG_PR_DIV_8       1
 #define IWDG_PR_DIV_16      2
@@ -1718,7 +1718,7 @@ typedef struct
 #define IWDG_PR_DIV_128     5
 #define IWDG_PR_DIV_256     6
 
-// IWDG_SR values
+// IWDG_SR bits
 #define IWDG_RVU            (1 << 1)
 #define IWDG_PVU            (1 << 0)
 
@@ -1735,11 +1735,11 @@ typedef struct
 
 #define WWDG   ((WWDG_t*) STM_WWDG_BASE)
 
-// WWDG_CR values
+// WWDG_CR bits
 #define WWDG_WDGA           (1 << 7)
 #define WWDG_T(n)           (n)
 
-// WWDG_CFR values
+// WWDG_CFR bits
 #define WWDG_EWI            (1 << 9)
 #define WWDG_WDGTB_DIV_1    (0 << 7)
 #define WWDG_WDGTB_DIV_2    (1 << 7)
@@ -1747,7 +1747,7 @@ typedef struct
 #define WWDG_WDGTB_DIV_8    (3 << 7)
 #define WWDG_W(n)           (n)
 
-// WWDG_SR values
+// WWDG_SR bits
 #define WWDG_EWIF           (1 << 0)
 
 
@@ -1781,7 +1781,7 @@ typedef struct
 #define USB_PACKET_BUF      ((volatile uint8_t *) STM_USB_DEV_FS_SRAM_BASE)
 #define USB_PACKET_BUF_SZ   (512 * 2)
 
-// USB_EPR[n] values
+// USB_EPR[n] bits
 #define USB_CTR_RX              (1 << 15)
 #define USB_DTOG_RX             (1 << 14)
 #define USB_GET_DTOG_RX(r)      (((r) >> 14) & 1)
@@ -1811,12 +1811,12 @@ typedef struct
 
 #define USB_EPR_RW_MASK         0x070F
 
-// BTABLE COUNT_RX values
+// BTABLE COUNT_RX bits
 #define USB_BL_SIZE             (1 << 15)
 #define USB_NUM_BLOCK(x)        ((x) << 10)
 #define USB_GET_COUNT_RX(x)     ((x) & 0x1FF)
 
-// USB_CNTR values
+// USB_CNTR bits
 #define USB_CTRM                (1 << 15)
 #define USB_PMAOVRM             (1 << 14)
 #define USB_ERRM                (1 << 13)
@@ -1831,7 +1831,7 @@ typedef struct
 #define USB_PDWN                (1 << 1)
 #define USB_FRES                (1 << 0)
 
-// USB_ISTR values
+// USB_ISTR bits
 #define USB_CTR                 (1 << 15)
 #define USB_PMAOVR              (1 << 14)
 #define USB_ERR                 (1 << 13)
@@ -1843,14 +1843,14 @@ typedef struct
 #define USB_DIR                 (1 << 4)
 #define USB_GET_EP_ID(x)        ((x) & 0xF)
 
-// USB_FNR values
+// USB_FNR bits
 #define USB_RXDP                (1 << 15)
 #define USB_RXDM                (1 << 14)
 #define USB_LCK                 (1 << 13)
 #define USB_GET_LSOF(r)         (((r) >> 11) & 3)
 #define USB_GET_FN(r)           ((r) & 0x7FF)
 
-// USB_DADDR values
+// USB_DADDR bits
 #define USB_EF                  (1 << 7)
 #define USB_ADD(x)              (x)
 
@@ -1876,7 +1876,7 @@ typedef struct
 #define UART5    ((USART_t*) STM_UART5_BASE)
 #define USART6   ((USART_t*) STM_USART6_BASE)
 
-// SR values
+// SR bits
 #define USART_CTS           (1 << 9)
 #define USART_LBD           (1 << 8)
 #define USART_TXE           (1 << 7)
@@ -1888,11 +1888,11 @@ typedef struct
 #define USART_FE            (1 << 1)
 #define USART_PE            (1 << 0)
 
-// BRR values
+// BRR bits
 #define USART_DIV_MANTISSA(n)   ((n) << 4)
 #define USART_DIV_FRACTION(n)   (n)
 
-// CR1 values
+// CR1 bits
 #define USART_OVER8         (1 << 15)
 #define USART_UE            (1 << 13)
 #define USART_M             (1 << 12)
@@ -1909,7 +1909,7 @@ typedef struct
 #define USART_RWU           (1 << 1)
 #define USART_SBK           (1 << 0)
 
-// CR2 values
+// CR2 bits
 #define USART_LINEN         (1 << 14)
 #define USART_STOP_1        (0 << 12)
 #define USART_STOP_05       (1 << 12)
@@ -1924,7 +1924,7 @@ typedef struct
 #define USART_LBDL          (1 << 5)
 #define USART_ADD(n)        (n)
 
-// CR3 values
+// CR3 bits
 #define USART_ONEBIT        (1 << 11)
 #define USART_CTSIE         (1 << 10)
 #define USART_CTSE          (1 << 9)
@@ -1938,7 +1938,7 @@ typedef struct
 #define USART_IREN          (1 << 1)
 #define USART_EIE           (1 << 0)
 
-// GTPR values
+// GTPR bits
 #define USART_GT(n)         ((n) << 8)
 #define USART_PSC(n)        (n)
 
@@ -1968,7 +1968,7 @@ typedef struct
 
 #define FSMC    ((FSMC_t*) STM_FSMC_BASE)
 
-// FSMC_BCR values
+// FSMC_BCR bits
 #define FSMC_CBURSTRW       (1 << 19)
 #define FSMC_ASYNCWAIT      (1 << 15)
 #define FSMC_EXTMOD         (1 << 14)
@@ -1987,7 +1987,7 @@ typedef struct
 #define FSMC_MUXEN          (1 << 1)
 #define FSMC_MBKEN          (1 << 0)
 
-// FSMC_BTR, FSMC_BWTR values
+// FSMC_BTR, FSMC_BWTR bits
 #define FSMC_ACCMOD_A       (0 << 28)
 #define FSMC_ACCMOD_B       (1 << 28)
 #define FSMC_ACCMOD_C       (2 << 28)
@@ -2019,7 +2019,7 @@ typedef struct
 #define I2C1    ((I2C_t*) STM_I2C1_BASE)
 #define I2C2    ((I2C_t*) STM_I2C2_BASE)
 
-// I2C_CR1 values
+// I2C_CR1 bits
 #define I2C_SWRST           (1 << 15)
 #define I2C_ALERT           (1 << 13)
 #define I2C_PEC             (1 << 12)
@@ -2035,7 +2035,7 @@ typedef struct
 #define I2C_SMBUS           (1 << 1)
 #define I2C_PE              (1 << 0)
 
-// I2C_CR2 values
+// I2C_CR2 bits
 #define I2C_LAST            (1 << 12)
 #define I2C_DMAEN           (1 << 11)
 #define I2C_ITBUFEN         (1 << 10)
@@ -2043,16 +2043,16 @@ typedef struct
 #define I2C_ITERREN         (1 << 8)
 #define I2C_FREQ(x)         ((x) << 0)
 
-// I2C_OAR1 values
+// I2C_OAR1 bits
 #define I2C_ADDMODE         (1 << 15)
 #define I2C_ALWAYS_ONE      (1 << 14)
 #define I2C_ADD(x)          ((x) << 0)
 
-// I2C_OAR2 values
+// I2C_OAR2 bits
 #define I2C_ADD2(x)         ((x) << 1)
 #define I2C_ENDUAL          (1 << 0)
 
-// I2C_SR1 values
+// I2C_SR1 bits
 #define I2C_SMBALERT        (1 << 15)
 #define I2C_TIMEOUT         (1 << 14)
 #define I2C_PECERR          (1 << 12)
@@ -2068,7 +2068,7 @@ typedef struct
 #define I2C_ADDR            (1 << 1)
 #define I2C_SB              (1 << 0)
 
-// I2C_SR2 values
+// I2C_SR2 bits
 #define I2C_PECR(x)         ((x) << 8)
 #define I2C_DUALF           (1 << 7)
 #define I2C_SMBHOST         (1 << 6)
@@ -2078,7 +2078,7 @@ typedef struct
 #define I2C_BUSY            (1 << 1)
 #define I2C_MSL             (1 << 0)
 
-// I2C_CCR values
+// I2C_CCR bits
 #define I2C_FS              (1 << 15)
 #define I2C_DUTY            (1 << 14)
 #define I2C_CCR(x)          ((x) << 0)
@@ -2105,7 +2105,7 @@ typedef struct
 #define SPI3    ((SPI_t*) STM_SPI3_I2S3_BASE)
 
 
-// SPI_CR1 values
+// SPI_CR1 bits
 #define SPI_BIDIMODE        (1 << 15)
 #define SPI_BIDIOE          (1 << 14)
 #define SPI_CRCEN           (1 << 13)
@@ -2121,7 +2121,7 @@ typedef struct
 #define SPI_CPOL            (1 << 1)
 #define SPI_CPHA            (1 << 0)
 
-// SPI_CR2 values
+// SPI_CR2 bits
 #define SPI_TXEIE           (1 << 7)
 #define SPI_RXNEIE          (1 << 6)
 #define SPI_ERRIE           (1 << 5)
@@ -2130,7 +2130,7 @@ typedef struct
 #define SPI_TXDMAEN         (1 << 1)
 #define SPI_RXDMAEN         (1 << 0)
 
-// SPI_SR values
+// SPI_SR bits
 #define SPI_FRE             (1 << 8)
 #define SPI_BSY             (1 << 7)
 #define SPI_OVR             (1 << 6)
@@ -2141,7 +2141,7 @@ typedef struct
 #define SPI_TXE             (1 << 1)
 #define SPI_RXNE            (1 << 0)
 
-// SPI_I2SCFGR values
+// SPI_I2SCFGR bits
 #define SPI_I2SMOD              (1 << 11)
 #define SPI_I2SE                (1 << 10)
 #define SPI_I2SCFG_SLAVE_TX     (0 << 8)
@@ -2160,7 +2160,7 @@ typedef struct
 #define SPI_CHLEN_16BIT         (0 << 0)
 #define SPI_CHLEN_32BIT         (1 << 0)
 
-// SPI_I2SPR values
+// SPI_I2SPR bits
 #define SPI_MCKOE           (1 << 9)
 #define SPI_ODD             (1 << 8)
 #define SPI_I2SDIV(x)       (x)
@@ -2190,19 +2190,19 @@ typedef struct
 #define DMA1_CH(x)  ((DMA_CHANNEL_t *) &(DMA1->chan[(x)-1]))
 #define DMA2_CH(x)  ((DMA_CHANNEL_t *) &(DMA2->chan[(x)-1]))
 
-// ISR values
+// ISR bits
 #define DMA_TEIF(x)         (8 << (((x) - 1) * 4))
 #define DMA_HTIF(x)         (4 << (((x) - 1) * 4))
 #define DMA_TCIF(x)         (2 << (((x) - 1) * 4))
 #define DMA_GIF(x)          (1 << (((x) - 1) * 4))
 
-// IFCR values
+// IFCR bits
 #define DMA_CTEIF(x)        (8 << (((x) - 1) * 4))
 #define DMA_CHTIF(x)        (4 << (((x) - 1) * 4))
 #define DMA_CTCIF(x)        (2 << (((x) - 1) * 4))
 #define DMA_CGIF(x)         (1 << (((x) - 1) * 4))
 
-// CCR values
+// CCR bits
 #define DMA_MEM2MEM         (1 << 14)
 #define DMA_PL(x)           ((x) << 12)
 #define DMA_MSIZE_8         (0 << 10)

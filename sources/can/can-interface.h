@@ -139,6 +139,8 @@
 // Возвращается, если произошла ошибка при взаимодействии с контроллером по 
 // шине связи (например, по SPI).
 #define CAN_ERR_IO              -3
+// Ошибка возвращается, если превышено допустимое число приёмных фильтров
+#define CAN_TOO_MANY_FILTERS    -4
 
 
 #define CAN_TIMING_SET_PS1(ps1)               ((ps1) << 0)
@@ -191,9 +193,11 @@ struct _canif_t
     // Приём кадров CAN.
     //   buffer         - буфер с кадрами
     //   nb_of_frames   - количество кадров в буфере
+    //   non_block      - если не равно 0, то функция выполняется в неблокирующем режиме:
+    //                    завершается сразу с нулевым возвратом, если нет принятых кадров.
     //   возвращает число принятых кадров или код ошибки (отрицательное число).
     // Функция должна выдавать только те кадры, которые успешно прошли фильтр.
-    int (* input)(canif_t *can, can_frame_t *buffer, int nb_of_frames);
+    int (* input)(canif_t *can, can_frame_t *buffer, int nb_of_frames, int non_block);
     
     // Добавление фильтра.
     // Выдаются из драйвера в прикладное ПО только те кадры, идентификаторы которых
@@ -281,9 +285,9 @@ int can_output(canif_t *can, const can_frame_t *buffer, int nb_of_frames)
 }
 
 static inline __attribute__((always_inline)) 
-int can_input(canif_t *can, can_frame_t *buffer, int nb_of_frames)
+int can_input(canif_t *can, can_frame_t *buffer, int nb_of_frames, int non_block)
 {
-    return can->input(can, buffer, nb_of_frames);
+    return can->input(can, buffer, nb_of_frames, non_block);
 }
 
 static inline __attribute__((always_inline)) 

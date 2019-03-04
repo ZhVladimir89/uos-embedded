@@ -16,9 +16,9 @@ typedef enum {
     MIL_REQUEST_READ             //!< Передача данных ОУ->КШ
 } mil_request_mode_t;
 
-static void copy_to_cyclogram_rxq(milandr_mil1553_t *mil, mil_slot_desc_t slot)
+static void copy_to_rxq(milandr_mil1553_t* mil, mil_slot_desc_t slot, uint8_t is_single)
 {
-    if (mem_queue_is_full(&mil->cyclogram_rxq)) {
+    if (mem_queue_is_full(&mil->bc_rxq)) {
         mil->nb_lost++;
     } else {
         unsigned wrc = (slot.words_count == 0 ? 32 : slot.words_count);
@@ -31,18 +31,17 @@ static void copy_to_cyclogram_rxq(milandr_mil1553_t *mil, mil_slot_desc_t slot)
             mil->nb_lost++;
             return;
         }
-        mem_queue_put(&mil->cyclogram_rxq, que_elem32);
-        // Номер слота всегда 0
-        *que_elem32++ = 0;
+        mem_queue_put(&mil->bc_rxq, que_elem32);
+        // Выставляем признак передачи (однократная или циклическая).
+        *que_elem32++ = is_single;
 #ifdef MIL_RX_PACKETS_WITH_TIMESTAMPS
         // Копируем текущее время
         *que_elem32++ = mil->operation_time;
 #endif
         // Копируем дескриптор слота
-        memcpy(que_elem32++, &slot, 4);
+        *que_elem32++ = slot.raw;
         // Копируем данные слота
         arm_reg_t *preg = &mil->reg->DATA[slot.subaddr * MIL_SUBADDR_WORDS_COUNT];
-
 
 #if BC_DEBUG
         uint16_t *que_elem_debug = (uint16_t *)que_elem32; // Область данных
@@ -56,60 +55,6 @@ static void copy_to_cyclogram_rxq(milandr_mil1553_t *mil, mil_slot_desc_t slot)
         }
 
 #if BC_DEBUG
-
-        int i;
-        debug_printf("\n");
-        debug_printf("wc=%d\n", wordscount);
-        for (i=0;i<wordscount;i++) {
-        	debug_printf("%04x\n", *que_elem_debug++);
-        }
-        debug_printf("\n");
-#endif
-
-    }
-}
-
-static void copy_to_urgent_rxq(milandr_mil1553_t *mil, mil_slot_desc_t slot)
-{
-    if (mem_queue_is_full(&mil->urgent_rxq)) {
-        mil->nb_lost++;
-    } else {
-        unsigned wrc = (slot.words_count == 0 ? 32 : slot.words_count);
-#ifdef MIL_RX_PACKETS_WITH_TIMESTAMPS
-        uint32_t *que_elem32 = mem_alloc_dirty(mil->pool, 2*wrc + 12);
-#else
-        uint32_t *que_elem32 = mem_alloc_dirty(mil->pool, 2*wrc + 8);
-#endif
-        if (!que_elem32) {
-            mil->nb_lost++;
-            return;
-        }
-        mem_queue_put(&mil->urgent_rxq, que_elem32);
-        // Первый байт номера слота всегда 1
-        *que_elem32++ = 1;
-#ifdef MIL_RX_PACKETS_WITH_TIMESTAMPS
-        // Копируем текущее время
-        *que_elem32++ = mil->operation_time;
-#endif
-        // Копируем дескриптор слота
-        memcpy(que_elem32++, &slot, 4);
-        // Копируем данные слота
-        arm_reg_t *preg = &mil->reg->DATA[slot.subaddr * MIL_SUBADDR_WORDS_COUNT];
-
-
-#if BC_DEBUG
-        uint16_t *que_elem_debug = (uint16_t *)que_elem32; // Область данных
-        int wordscount = wrc;
-#endif
-
-        uint16_t *que_elem = (uint16_t *) que_elem32;  // Область данных
-        while (wrc) {
-            *que_elem++ = *preg++;
-            wrc--;
-        }
-
-#if BC_DEBUG
-
         int i;
         debug_printf("\n");
         debug_printf("wc=%d\n", wordscount);
@@ -215,20 +160,19 @@ void mil_std_1553_bc_handler(milandr_mil1553_t *mil, const unsigned short status
 
     if (status & MIL_STD_STATUS_VALMESS) {
         int wc = 0; 
-        if (mil->urgent_desc.reserve) {
+        if (mil->single_indx < mil->single_cnt) {
             // Была передача вне очереди
-            if (mil->urgent_desc.command.req_pattern == 0 || mil->urgent_desc.command.req_pattern == 0x1f) {
+            if (mil->single_slots[mil->single_indx].command.req_pattern == 0 || mil->single_slots[mil->single_indx].command.req_pattern == 0x1f) {
                 mil->nb_commands++;
             } else {
-                if (mil->pool && mil->urgent_desc.transmit_mode == MIL_SLOT_RT_BC) {
-                    copy_to_urgent_rxq(mil, mil->urgent_desc);
-                    //copy_to_cyclogram_rxq(mil, mil->urgent_desc);
+                if (mil->pool && mil->single_slots[mil->single_indx].transmit_mode == MIL_SLOT_RT_BC) {
+                    copy_to_rxq(mil, mil->single_slots[mil->single_indx], 1);
                 }
-                wc = mil->urgent_desc.words_count;
+                wc = mil->single_slots[mil->single_indx].words_count;
                 mil->nb_words += (wc>0?wc:32);
             }
 #ifdef MIL_DETAILED_TRX_STAT
-            mil->rx_stat[mil->urgent_desc.command.addr][mil->urgent_desc.command.req_pattern]++;
+            mil->rx_stat[mil->single_slots[mil->single_indx].command.addr][mil->single_slots[mil->single_indx].command.req_pattern]++;
 #endif
         } else {
             if (mil->cur_slot != 0) {
@@ -238,7 +182,7 @@ void mil_std_1553_bc_handler(milandr_mil1553_t *mil, const unsigned short status
                 } else {
                     wc = slot.words_count;
                     if (mil->pool && slot.transmit_mode == MIL_SLOT_RT_BC) {
-                        copy_to_cyclogram_rxq(mil, slot);
+                        copy_to_rxq(mil, slot, 0);
                     }
                     mil->nb_words += (wc>0?wc:32);
                 }
@@ -250,24 +194,20 @@ void mil_std_1553_bc_handler(milandr_mil1553_t *mil, const unsigned short status
 
     } else if (status & MIL_STD_STATUS_ERR) {
 	    mil->nb_errors++;
-	    if (mil->urgent_desc.reserve) {
+	    if (mil->single_indx < mil->single_cnt) {
 	    	mil->nb_emergency_errors++;
 	    }
 	}
 
-	if (mil->urgent_desc.reserve) // Если была передача вне очереди, то сбрасываем дескриптор,
-		mil->urgent_desc.raw = 0; // чтобы не начать её повторно
-	else {
-		if (mil->cur_slot != 0) {
-			mil->cur_slot = mil->cur_slot->next;
-		}
-		if (mil->cur_slot == 0)
-			mil->cur_slot = mil->cyclogram;
-	}
+	if (mil->cur_slot != 0)
+		mil->cur_slot = mil->cur_slot->next;
+	
+    if (mil->cur_slot == 0)
+		mil->cur_slot = mil->cyclogram;
 
-	if (mil->urgent_desc.raw != 0) {    // Есть требование на выдачу вне очереди
-		start_slot(mil, mil->urgent_desc, mil->urgent_data);
-		mil->urgent_desc.reserve = 1;   // Признак того, что идёт передача вне очереди
+	if (mil->single_indx < mil->single_cnt) { // Есть однократные сообщения для передачи
+		start_slot(mil, mil->single_slots[mil->single_indx], mil->single_data + mil->single_indx * MIL_SUBADDR_WORDS_COUNT);
+		++mil->single_indx;
 	} else if ((mil->cur_slot != mil->cyclogram) || (mil->tim_reg == 0) || (mil->period_ms == 0)) {
 		// если таймер не задан, или его период равен нулю циклограмма начинается с начала
 		if (mil->cur_slot != 0) {

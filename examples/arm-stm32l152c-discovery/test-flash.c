@@ -4,9 +4,9 @@
 #include <stm32l1/gpio.h>
 #include <timer/timer.h>
 
-#include <flash/sdhc-spi.h>
-const char *flash_name = "SD";
-sdhc_spi_t flash;
+#include <flash/generic25.h>
+const char *flash_name = "GEN25";
+generic25_flash_t flash;
 
 #define SPI_NUM           2
 #define ERASE_SECTOR      5
@@ -184,7 +184,7 @@ void uos_init (void)
     
     stm32l1_spi_init(&spi, SPI_NUM, spi_flash_cs);
 
-    sd_spi_init(&flash, (spimif_t *)&spi, 0);
+    generic25_flash_init(&flash, (spimif_t *)&spi, 8000000, 0);
 	
 	task_create (hello, &flash, "hello", 1, task, sizeof (task));
 }

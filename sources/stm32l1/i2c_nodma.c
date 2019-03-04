@@ -1,7 +1,7 @@
 #include <runtime/lib.h>
 #include <kernel/uos.h>
 #include <kernel/internal.h>
-#include <stm32l1/i2c.h>
+#include <stm32l1/i2c_nodma.h>
 
 #define INTERRUPT_MASK  (I2C_ITEVTEN | I2C_ITERREN)
 
@@ -41,7 +41,7 @@ static inline int set_timings(I2C_t *reg, unsigned mode, unsigned khz)
 	return I2C_ERR_OK;
 }
 
-static int start_trx(stm32l1_i2c_t *stm32l1_i2c)
+static int start_trx(stm32l1_i2c_nodma_t *stm32l1_i2c)
 {
     while (stm32l1_i2c->cur_trans->size == 0) {
         stm32l1_i2c->cur_trans = stm32l1_i2c->cur_trans->next;
@@ -58,7 +58,7 @@ static int start_trx(stm32l1_i2c_t *stm32l1_i2c)
     
     stm32l1_i2c->reg->CR1 |= I2C_START;
 
-/*    
+/*
 debug_printf("CR1   %08X\n", stm32l1_i2c->reg->CR1);
 debug_printf("CR2   %08X\n", stm32l1_i2c->reg->CR2);
 debug_printf("SR1   %08X\n", stm32l1_i2c->reg->SR1);
@@ -66,12 +66,13 @@ debug_printf("SR2   %08X\n", stm32l1_i2c->reg->SR2);
 debug_printf("CCR   %08X\n", stm32l1_i2c->reg->CCR);
 debug_printf("TRISE %08X\n", stm32l1_i2c->reg->TRISE);
 */
+
     return I2C_ERR_OK;
 }
 
 static int stm32l1_i2c_trx(i2cif_t *i2c, i2c_message_t *msg)
 {
-    stm32l1_i2c_t *stm32l1_i2c = (stm32l1_i2c_t *) i2c;
+    stm32l1_i2c_nodma_t *stm32l1_i2c = (stm32l1_i2c_nodma_t *) i2c;
     I2C_t *ireg = stm32l1_i2c->reg;
     int res = I2C_ERR_OK;
     
@@ -79,6 +80,9 @@ static int stm32l1_i2c_trx(i2cif_t *i2c, i2c_message_t *msg)
         return I2C_ERR_BAD_PARAM;
     
     mutex_lock(&i2c->lock);
+    while (stm32l1_i2c->busy)
+        mutex_wait(&i2c->lock);
+    stm32l1_i2c->busy = 1;
 	
 	res = set_timings(ireg, msg->mode & I2C_MODE_MASK, I2C_MODE_GET_FREQ_KHZ(msg->mode));
 	if (res != I2C_ERR_OK)
@@ -95,16 +99,19 @@ static int stm32l1_i2c_trx(i2cif_t *i2c, i2c_message_t *msg)
 	
 trx_exit:
 	ireg->CR1 = 0;
+	stm32l1_i2c->busy = 0;
   	mutex_unlock(&i2c->lock);
     return res;
 }
 
-static void process_last_byte(stm32l1_i2c_t *stm32l1_i2c)
+static void process_last_byte(stm32l1_i2c_nodma_t *stm32l1_i2c)
 {
     I2C_t *ireg = stm32l1_i2c->reg;
     const int is_last_transaction = (stm32l1_i2c->cur_trans->next == 0);
 //debug_printf("is_last_transaction %d\n", is_last_transaction);
-    
+
+    while (! (ireg->SR1 & I2C_BTF));
+
     if (is_last_transaction) {
         ireg->CR1 |= I2C_STOP;
     } else {
@@ -119,7 +126,7 @@ static void process_last_byte(stm32l1_i2c_t *stm32l1_i2c)
 
 static bool_t trx_handler(void *arg)
 {
-    stm32l1_i2c_t *stm32l1_i2c = arg;
+    stm32l1_i2c_nodma_t *stm32l1_i2c = arg;
     I2C_t *ireg = stm32l1_i2c->reg;
     const uint32_t sr1 = ireg->SR1;
     const int is_last_byte = (stm32l1_i2c->trx_size == 1);
@@ -169,8 +176,9 @@ static bool_t trx_handler(void *arg)
                 mutex_activate(&stm32l1_i2c->i2cif.lock, (void *) I2C_ERR_OK);
             }
         }
-        if (is_last_byte)
+        if (is_last_byte) {
             process_last_byte(stm32l1_i2c);
+        }
     //} else if (sr1 & I2C_STOPF) {
     } else if ((sr1 == 0) && (stm32l1_i2c->trx_size == 0)) {
 //debug_printf("STOP\n");
@@ -184,7 +192,7 @@ static bool_t trx_handler(void *arg)
 static bool_t error_handler(void *arg)
 {
 //debug_printf("error_handler\n");
-    stm32l1_i2c_t *stm32l1_i2c = arg;
+    stm32l1_i2c_nodma_t *stm32l1_i2c = arg;
     I2C_t *ireg = stm32l1_i2c->reg;
     const uint32_t sr1 = ireg->SR1;
     int res = I2C_ERR_OK;
@@ -203,7 +211,7 @@ static bool_t error_handler(void *arg)
     return 0;
 }
 
-int stm32l1_i2c_init(stm32l1_i2c_t *i2c, int port)
+int stm32l1_i2c_nodma_init(stm32l1_i2c_nodma_t *i2c, int port)
 {
     i2cif_t *i2cif = to_i2cif(i2c);
     i2cif->trx = stm32l1_i2c_trx;

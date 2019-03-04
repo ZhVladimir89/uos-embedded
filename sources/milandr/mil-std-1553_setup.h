@@ -43,13 +43,13 @@
 #define MIL_ADDR_COUNT	    32
 #define MIL_SUBADDR_COUNT	32
 
-struct mil_txbuf_t
+struct mil_rtbuf_t
 {
-	uint32_t            data[MIL_SUBADDR_WORDS_COUNT];
+	uint16_t            data[MIL_SUBADDR_WORDS_COUNT];
 	int					nb_words;
 	volatile int		busy;
 };
-typedef struct mil_txbuf_t mil_txbuf_t;
+typedef struct mil_rtbuf_t mil_rtbuf_t;
 
 // Реализация не потоко-защищённая
 
@@ -65,7 +65,7 @@ struct milandr_mil1553_t
     TIMER_t             *tim_reg;
     int                 tim_irq;
     mem_pool_t          *pool;
-    mem_queue_t         cyclogram_rxq;
+    mem_queue_t         bc_rxq;
     mil_slot_t          *cyclogram;
     mil_slot_t          *cur_slot;
     unsigned            nb_slots;
@@ -73,23 +73,24 @@ struct milandr_mil1553_t
 #ifdef MIL_RX_PACKETS_WITH_TIMESTAMPS
     unsigned long       operation_time;
 #endif
-    mil_slot_desc_t     urgent_desc;
-    uint16_t            urgent_data[MIL_SUBADDR_WORDS_COUNT];
     int                 is_running;
-    
-    // mem_queue_t         rt_rxq;			// только для RT
-    mil_txbuf_t			txbuf[MIL_SUBADDR_COUNT]; // только для RT
-    mil_txbuf_t			rxbuf[MIL_SUBADDR_COUNT]; // только для RT
 
-    mem_queue_t         urgent_rxq;         // только для BC
+    // Отправка нескольких однократных сообщений.
+    unsigned            single_cnt;  // количество сообщений
+    unsigned            single_indx; // индекс отправляемого сообщения
+    uint16_t            single_data[MIL_SINGLE_MSG_COUNT * MIL_SUBADDR_WORDS_COUNT]; // данные для отправки
+    mil_slot_desc_t     single_slots[MIL_SINGLE_MSG_COUNT]; // описание слотов однократных сообщений
+
+    // mem_queue_t         rt_rxq;			// только для RT
+    mil_rtbuf_t			txbuf[MIL_SUBADDR_COUNT]; // только для RT
+    mil_rtbuf_t			rxbuf[MIL_SUBADDR_COUNT]; // только для RT
+
     // Статистика
     unsigned            nb_words;
     unsigned            nb_commands;
     unsigned            nb_lost;
     unsigned            nb_errors;
     unsigned            nb_emergency_errors;
-    unsigned            queue_len;
-    unsigned            nb_transmits;
     unsigned            nb_irq;
     
 #ifdef MIL_DETAILED_TRX_STAT

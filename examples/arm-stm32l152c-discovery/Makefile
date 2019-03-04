@@ -2,7 +2,7 @@ TARGET		= $(CURDIR)
 OS		= $(shell cd ../..; pwd)
 include target.cfg
 
-TEST		= philosophers
+TEST		= test-uart
 TESTS		+= test-led.bin
 TESTS		+= test-debug.bin
 TESTS		+= test-task.bin
@@ -39,20 +39,22 @@ else
     TESTS       += test-fat32-fw-file-out.bin
     TESTS       += read-temp.bin
     TESTS       += test-ds7505.bin
+    TESTS       += test-ds7505-nodma.bin
     TESTS       += test-mic184.bin
     
 endif
 
 
 OUTS		= $(TESTS:%.bin=%.elf)
+HEXES		= $(TESTS:%.bin=%.hex)
 
-all:		$(OUTS) $(TESTS) $(TEST).dis
+all:		$(OUTS) $(TESTS) $(HEXES) $(TEST).dis
 		$(SIZE) $(OUTS)
 
 $(OUTS) $(TESTS): startup.o libuos.a
 
 clean:
-		rm -rf *~ *.[oasi] *.elf *.lst *.dis *.map .deps $(TESTS) $(MODULES)
+		rm -rf *~ *.[oasi] *.elf *.lst *.dis *.map .deps $(TESTS) $(HEXES) $(MODULES)
 
 load:		$(TEST).bin
 		st-flash --reset write $< 0x08000000

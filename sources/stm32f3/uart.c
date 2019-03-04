@@ -19,6 +19,7 @@
  */
 #include <runtime/lib.h>
 #include <kernel/uos.h>
+#include <kernel/internal.h>
 #include <stm32f3/uart.h>
 
 const unsigned USART_CR1_COMMON = USART_UE | USART_TE | USART_RE | USART_RXNEIE;

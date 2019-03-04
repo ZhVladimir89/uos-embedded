@@ -51,29 +51,95 @@ generator will not work properly
     while (! (RCC->CR & (RCC_PLLRDY | RCC_HSERDY)));
     
     // We have to increase embedded flash wait states when 
-    // frequency is high
-    FLASH_IFACE->ACR = FLASH_LATENCY(5) | FLASH_PRFTEN |
+    // frequency is high. The wait states calculation is done for
+    // power voltage range 2.7V - 3.6V
+    FLASH->ACR = FLASH_LATENCY(KHZ / 30000) | FLASH_PRFTEN |
         FLASH_ICEN | FLASH_DCEN;
     
-    // Switch core to PLL clocks. Frequency of AHB is set to HCLK,
-    // APB1 - to HCLK/2, APB2 - to HCLK/4
-    RCC->CFGR = RCC_SW_PLL | RCC_HPRE_NODIV | RCC_PPRE1_DIV4 |
-        RCC_PPRE2_DIV2;
+    // Switch core to PLL clocks
+    unsigned cfgr = RCC_SW_PLL;
+    
+#if AHB_DIV==1
+    cfgr |= RCC_HPRE_NODIV;
+#elif AHB_DIV==2
+    cfgr |= RCC_HPRE_DIV2;
+#elif AHB_DIV==4
+    cfgr |= RCC_HPRE_DIV4;
+#elif AHB_DIV==8
+    cfgr |= RCC_HPRE_DIV8;
+#elif AHB_DIV==16
+    cfgr |= RCC_HPRE_DIV16;
+#elif AHB_DIV==64
+    cfgr |= RCC_HPRE_DIV64;
+#elif AHB_DIV==128
+    cfgr |= RCC_HPRE_DIV128;
+#elif AHB_DIV==256
+    cfgr |= RCC_HPRE_DIV256;
+#elif AHB_DIV==512
+    cfgr |= RCC_HPRE_DIV512;
+#else
+#   error "Unsupported AHB divider value (AHB_DIV)!"
+#endif
+
+#if APB1_DIV==1
+    cfgr |= RCC_PPRE1_NODIV;
+#elif APB1_DIV==2
+    cfgr |= RCC_PPRE1_DIV2;
+#elif APB1_DIV==4
+    cfgr |= RCC_PPRE1_DIV4;
+#elif APB1_DIV==8
+    cfgr |= RCC_PPRE1_DIV8;
+#elif APB1_DIV==16
+    cfgr |= RCC_PPRE1_DIV16;
+#else
+#   error "Unsupported APB1 divider value (APB1_DIV)!"
+#endif
+
+#if APB2_DIV==1
+    cfgr |= RCC_PPRE2_NODIV;
+#elif APB2_DIV==2
+    cfgr |= RCC_PPRE2_DIV2;
+#elif APB2_DIV==4
+    cfgr |= RCC_PPRE2_DIV4;
+#elif APB2_DIV==8
+    cfgr |= RCC_PPRE2_DIV8;
+#elif APB2_DIV==16
+    cfgr |= RCC_PPRE2_DIV16;
+#else
+#   error "Unsupported APB2 divider value (APB2_DIV)!"
+#endif
+
+    RCC->CFGR = cfgr;
     while ((RCC->CFGR & RCC_SWS_MASK) != RCC_SWS_PLL);
 
 #ifndef NDEBUG
+#ifdef USE_USART6
+    // Init debug UART
+    RCC->AHB1ENR |= RCC_GPIOGEN;
+    GPIOG->MODER |= GPIO_ALT(9) | GPIO_ALT(14);
+    GPIOG->AFRH |= GPIO_AF_USART6(9) | GPIO_AF_USART6(14);
+    
+    unsigned mant = (unsigned)(KHZ / APB2_DIV / (115.2 * 16));
+    unsigned frac = (KHZ / APB2_DIV / (115.2 * 16) - mant) * 16;
+    RCC->APB2ENR |= RCC_USART6EN;
+    USART6->CR1 |= USART_UE;
+    USART6->CR2 |= USART_STOP_1;
+    USART6->BRR = USART_DIV_MANTISSA(mant) | USART_DIV_FRACTION(frac);
+    USART6->CR1 |= USART_TE | USART_RE;
+#else
     // Init debug UART
     RCC->AHB1ENR |= RCC_GPIOCEN;
     GPIOC->MODER |= GPIO_ALT(10) | GPIO_ALT(11);
     GPIOC->AFRH |= GPIO_AF_USART3(10) | GPIO_AF_USART3(11);
     
-    unsigned mant = (unsigned)(KHZ / 4 / (115.2 * 16));
-    unsigned frac = (KHZ / 4 / (115.2 * 16) - mant) * 16;
+    unsigned mant = (unsigned)(KHZ / APB1_DIV / (115.2 * 16));
+    unsigned frac = (KHZ / APB1_DIV / (115.2 * 16) - mant) * 16;
     RCC->APB1ENR |= RCC_USART3EN;
     USART3->CR1 |= USART_UE;
     USART3->CR2 |= USART_STOP_1;
     USART3->BRR = USART_DIV_MANTISSA(mant) | USART_DIV_FRACTION(frac);
     USART3->CR1 |= USART_TE | USART_RE;
+#endif
 #endif // NDEBUG
 
 	arch_init_ram();

@@ -9,6 +9,7 @@ struct _generic25_flash_t
     flashif_t       flashif;
     spimif_t       *spi;
     spi_message_t   msg;
+    int             addr4bytes;
     uint8_t         databuf[20];
 };
 typedef struct _generic25_flash_t generic25_flash_t;

@@ -104,30 +104,30 @@ static inline int set_timings(I2C_t *reg, unsigned mode, unsigned khz)
     if ((scll > 255) || (scll < 0) || (sclh > 255) || (sclh < 0))
         return I2C_ERR_BAD_FREQ;
 	
-	switch (mode) {
-	case I2C_MODE_SM:
-	    reg->TIMINGR = I2C_PRESC(I2C_PRESCALER - 1) |
+    switch (mode) {
+    case I2C_MODE_SM:
+        reg->TIMINGR = I2C_PRESC(I2C_PRESCALER - 1) |
             I2C_SDADEL(SM_SDADEL) | I2C_SCLDEL(SM_SCLDEL_MIN) |
             I2C_SCLH(sclh) | I2C_SCLL(scll);
-	    break;
-	case I2C_MODE_SMBUS:
-	    reg->TIMINGR = I2C_PRESC(I2C_PRESCALER - 1) |
+        break;
+    case I2C_MODE_SMBUS:
+        reg->TIMINGR = I2C_PRESC(I2C_PRESCALER - 1) |
             I2C_SDADEL(SMBUS_SDADEL) | I2C_SCLDEL(SMBUS_SCLDEL_MIN) |
             I2C_SCLH(sclh) | I2C_SCLL(scll);
-	    break;
-	case I2C_MODE_FM:
-	    reg->TIMINGR = I2C_PRESC(I2C_PRESCALER - 1) |
+        break;
+    case I2C_MODE_FM:
+        reg->TIMINGR = I2C_PRESC(I2C_PRESCALER - 1) |
             I2C_SDADEL(FM_SDADEL) | I2C_SCLDEL(FM_SCLDEL_MIN) |
             I2C_SCLH(sclh) | I2C_SCLL(scll);
-	    break;
-	case I2C_MODE_FM_PLUS:
-	    reg->TIMINGR = I2C_PRESC(I2C_PRESCALER - 1) |
+        break;
+    case I2C_MODE_FM_PLUS:
+        reg->TIMINGR = I2C_PRESC(I2C_PRESCALER - 1) |
             I2C_SDADEL(FMP_SDADEL) | I2C_SCLDEL(FMP_SCLDEL_MIN) |
             I2C_SCLH(sclh) | I2C_SCLL(scll);
-	    break;
-	default:
-	    return I2C_ERR_MODE_NOT_SUPP;
-	}
+        break;
+    default:
+        return I2C_ERR_MODE_NOT_SUPP;
+    }
 	
     reg->CR1 = I2C_DNF(DIG_FILT_STEPS) | CR1_IE_MASK
 #if !I2C_ANALOG_FILTER_ENABLED

@@ -52,9 +52,9 @@ void uos_init (void)
 {
     debug_printf("\n\nTesting ADT7461\n");
 
-    stm32l1_gpio_init(&scl, GPIO_PORT_B, 10, GPIO_FLAGS_ALT_I2C2);
-    stm32l1_gpio_init(&sda, GPIO_PORT_B, 11, GPIO_FLAGS_ALT_I2C2);
-    stm32l1_i2c_init(&i2c, 2);
+    stm32l1_gpio_init(&scl, GPIO_PORT_B, 6, GPIO_FLAGS_ALT_I2C1);
+    stm32l1_gpio_init(&sda, GPIO_PORT_B, 7, GPIO_FLAGS_ALT_I2C1 | GPIO_FLAGS_OPEN_DRAIN | GPIO_FLAGS_PULL_UP);
+    stm32l1_i2c_init(&i2c, 1);
     
 	task_create( task, "task", "task", 1, task_space, sizeof(task_space) );
 }

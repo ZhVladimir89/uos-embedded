@@ -17,7 +17,7 @@ typedef struct _stm32l1_i2c_t
 	i2c_transaction_t   *cur_trans;
 } stm32l1_i2c_t;
 
-// Нумерация портов начиная с 0.
+// Нумерация портов начиная с 1.
 int stm32l1_i2c_init(stm32l1_i2c_t *i2c, int port);
 
 #endif // __STM32L1_I2C_H__

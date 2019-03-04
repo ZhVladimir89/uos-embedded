@@ -81,10 +81,15 @@ static int mic184_read(thermoif_t *thermo)
     
     if (mic184->precision == MIC184_PRECISION_0_5_GRAD) {
         short res_temp = (temp[0] << 8) | temp[1];
-        return res_temp * 1000 / 256;
+        res = res_temp * 1000 / 256;
     } else {
-        return temp[0] * 1000;
+        res = temp[0] * 1000;
     }
+    
+    if (res <= 125000)
+        return res;
+    else
+        return 0x7FFFFFFF + THERMO_ERR_BAD_VALUE;
 }
 
 int mic184_switch_sensor(mic184_t *mic184, int sensor)

@@ -134,14 +134,17 @@ for (i = 0; i < m->msg.word_count; ++i)
 	debug_printf("%02X ", m->databuf[i]);
 debug_printf("\n\n");    
 */
-    for (i = 7; i < m->msg.word_count; ++i)
-		if (m->databuf[i] != 0xFF) {
-			*r1 = &m->databuf[i];
-			break;
-		}
+    for (i = 7; i < m->msg.word_count; ++i) {
+        if (m->databuf[i] != 0xFF) {
+            *r1 = &m->databuf[i];
+            break;
+        }
+    }
+
     if (i == m->msg.word_count)
         return FLASH_ERR_BAD_ANSWER;
-	return FLASH_ERR_OK;
+
+    return FLASH_ERR_OK;
 }
 
 //

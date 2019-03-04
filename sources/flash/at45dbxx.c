@@ -154,7 +154,6 @@ static int erase_sector(flashif_t *flash, unsigned sector_num)
     int res;
     uint8_t status;
     at45dbxx_t *m = (at45dbxx_t *) flash;
-    mutex_lock(&flash->lock);
 
     unsigned address = at45dbxx_sector_address(flash, sector_num);
     uint8_t *p = (uint8_t *) &address;
@@ -166,22 +165,17 @@ static int erase_sector(flashif_t *flash, unsigned sector_num)
     m->msg.rx_data = 0;
     m->msg.word_count = 4;
     m->msg.mode &= ~SPI_MODE_CS_HOLD;
-    if (spim_trx(m->spi, &m->msg) != SPI_ERR_OK) {
-        mutex_unlock(&flash->lock);
+    if (spim_trx(m->spi, &m->msg) != SPI_ERR_OK)
         return FLASH_ERR_IO;
-    }
 
     while (1) {
         res = read_status(m, &status);
-        if (res != FLASH_ERR_OK) {
-            mutex_unlock(&flash->lock);
+        if (res != FLASH_ERR_OK)
             return res;
-        }
 
         if (status & AT45_STATUS_RDY) break;
     }
 
-    mutex_unlock(&flash->lock);
     return FLASH_ERR_OK;
 }
 
@@ -193,7 +187,10 @@ static int at45dbxx_erase_sectors(flashif_t *flash, unsigned sector_num,
     mutex_lock(&flash->lock);
     for (i = 0; i < nb_sectors; ++i) {
         res = erase_sector(flash, sector_num + i);
-        if (res != FLASH_ERR_OK) return res;
+        if (res != FLASH_ERR_OK) {
+            mutex_unlock(&flash->lock);
+            return res;
+        }
     }
     mutex_unlock(&flash->lock);
     return FLASH_ERR_OK;

@@ -24,13 +24,12 @@ task_t *task_idle;			/* background system task */
 mutex_irq_t mutex_irq [ARCH_INTERRUPTS]; /* interrupt handlers */
 
 #ifndef IDLE_TASK_STACKSZ
-#define IDLE_TASK_STACKSZ   512
+#define IDLE_TASK_STACKSZ   256
 #endif
 
 #define ALIGNED_IDLE_TASK_STACKSZ ((IDLE_TASK_STACKSZ + sizeof(void *) - 1) & ~(sizeof(void *) - 1))
 
-static ARRAY (task_idle_data, sizeof(task_t) + ALIGNED_IDLE_TASK_STACKSZ);
-
+static ARRAY (task_idle_data, sizeof(task_t) + ALIGNED_IDLE_TASK_STACKSZ - sizeof(void *));
 bool_t task_need_schedule;
 
 /*
@@ -56,7 +55,6 @@ mutex_activate (mutex_t *m, void *message)
 {
 	task_t *t;
 	mutex_slot_t *s;
-
 
 	assert (m != 0);
 	if (! m->item.next)

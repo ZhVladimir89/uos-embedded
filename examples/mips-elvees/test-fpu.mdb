@@ -1,0 +1,3 @@
+source mem_nvcom02t.cfg 
+loadelf test-fpu.elf
+run

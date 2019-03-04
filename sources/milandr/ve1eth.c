@@ -1235,8 +1235,8 @@ void eth_handle_transmit_interrupt(eth_t *u)
  #endif
 	
 	// подсчёт коллизии. 
-    if((status_ifr & ARM_ETH_LC) || (status_phy & ARM_ETH_PHY_COL))
-        u->netif.out_collisions++;
+	if((status_ifr & ARM_ETH_LC) || (status_phy & ARM_ETH_PHY_COL))
+		u->netif.out_collisions++;
 	
 	if(status_ifr & ARM_ETH_XF_ERR) {
 		u->netif.out_errors++;

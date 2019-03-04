@@ -75,7 +75,7 @@
 #   define TIMER_IRQ    PIC32_VECT_CT   /* Core Timer Interrupt */
 #endif
 
-#if ARM_STM32F3 || ARM_STM32F4
+#if ARM_STM32F2 || ARM_STM32F3 || ARM_STM32F4
 #   define TIMER_IRQ        ARCH_TIMER_IRQ  /* Systick */
 #endif
 

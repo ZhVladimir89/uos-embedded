@@ -24,7 +24,7 @@ static void do_set_timing(stm32f3_can_t *stm32f3_can)
     CAN->MCR &= ~CAN_INRQ;
 }
 
-int stm32f3_can_output(canif_t *can, const can_frame_t *buffer, int nb_of_frames)
+static int stm32f3_can_output(canif_t *can, const can_frame_t *buffer, int nb_of_frames)
 {
     const int NB_OF_TX_MAILBOXES = 3;
     int mb_n;
@@ -93,7 +93,7 @@ static bool_t rx_handler (void *arg)
     return 0;
 }
 
-int stm32f3_can_input(canif_t *can, can_frame_t *buffer, int nb_of_frames)
+static int stm32f3_can_input(canif_t *can, can_frame_t *buffer, int nb_of_frames, int non_block)
 {
     stm32f3_can_t *stm32f3_can = (stm32f3_can_t *)can;
     
@@ -103,20 +103,22 @@ int stm32f3_can_input(canif_t *can, can_frame_t *buffer, int nb_of_frames)
     mutex_lock(&can->lock);
     mutex_lock(&stm32f3_can->rx0_lock);
 
-    while (bq_is_empty(&stm32f3_can->inq))
-        mutex_wait(&stm32f3_can->rx0_lock);
+    if (!non_block)
+        while (bq_is_empty(&stm32f3_can->inq))
+            mutex_wait(&stm32f3_can->rx0_lock);
         
     const int avail_nb_frames = bq_avail_get(&stm32f3_can->inq) / sizeof(can_frame_t);
     if (avail_nb_frames < nb_of_frames)
         nb_of_frames = avail_nb_frames;
-    bq_get_array(&stm32f3_can->inq, buffer, nb_of_frames * sizeof(can_frame_t));
+    if (nb_of_frames != 0)
+        bq_get_array(&stm32f3_can->inq, buffer, nb_of_frames * sizeof(can_frame_t));
         
     mutex_unlock(&stm32f3_can->rx0_lock);
     mutex_unlock(&can->lock);
     return nb_of_frames;
 }
 
-int stm32f3_can_add_filter(canif_t *can, uint32_t mask, uint32_t pattern)
+static int stm32f3_can_add_filter(canif_t *can, uint32_t mask, uint32_t pattern)
 {
     mutex_lock(&can->lock);
     
@@ -162,7 +164,7 @@ static void do_clear_filters()
     CAN->FMR = 0;
 }
 
-int stm32f3_can_clear_filters(canif_t *can)
+static int stm32f3_can_clear_filters(canif_t *can)
 {
     mutex_lock(&can->lock);
     do_clear_filters();
@@ -170,7 +172,7 @@ int stm32f3_can_clear_filters(canif_t *can)
     return CAN_ERR_OK;
 }
 
-int stm32f3_can_get_mode(canif_t *can)
+static int stm32f3_can_get_mode(canif_t *can)
 {
     if (! (RCC->APB1ENR & RCC_CANEN))
         return IFACE_MODE_SHUTDOWN;
@@ -180,7 +182,7 @@ int stm32f3_can_get_mode(canif_t *can)
         return IFACE_MODE_OPERATION;
 }
 
-int stm32f3_can_get_state(canif_t *can)
+static int stm32f3_can_get_state(canif_t *can)
 {
     if (CAN->ESR & CAN_BOFF)
         return CAN_BUS_OFF;
@@ -190,7 +192,7 @@ int stm32f3_can_get_state(canif_t *can)
         return CAN_ERROR_ACTIVE;
 }
 
-int stm32f3_can_reset(canif_t *can)
+static int stm32f3_can_reset(canif_t *can)
 {
     mutex_lock(&can->lock);
     if (stm32f3_can_get_mode(can) != IFACE_MODE_SHUTDOWN)
@@ -199,7 +201,7 @@ int stm32f3_can_reset(canif_t *can)
     return CAN_ERR_OK;
 }
 
-int stm32f3_can_set_timing(canif_t *can, unsigned baud_rate, unsigned timing)
+static int stm32f3_can_set_timing(canif_t *can, unsigned baud_rate, unsigned timing)
 {
     stm32f3_can_t *stm32f3_can = (stm32f3_can_t *)can;
     
@@ -220,7 +222,7 @@ int stm32f3_can_set_timing(canif_t *can, unsigned baud_rate, unsigned timing)
     return CAN_ERR_OK;
 }
 
-void enable_controller(canif_t *can)
+static void enable_controller(canif_t *can)
 {
     RCC->APB1ENR |= RCC_CANEN;
     do_reset();
@@ -234,7 +236,7 @@ void enable_controller(canif_t *can)
     do_clear_filters();
 }
 
-int stm32f3_can_switch_mode(canif_t *can, int mode)
+static int stm32f3_can_switch_mode(canif_t *can, int mode)
 {
     mutex_lock(&can->lock);
     

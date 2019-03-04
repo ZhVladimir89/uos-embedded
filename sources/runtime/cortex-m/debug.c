@@ -69,10 +69,12 @@ static inline short arch_getchar()
 #endif // defined (ARM_1986BE1) || defined (ARM_1986BE9)
 
 
-#if defined(ARM_STM32F4) || defined(ARM_STM32L1)
+#if defined(ARM_STM32F2) || defined(ARM_STM32F4) || defined(ARM_STM32L1)
 
 #if defined(USE_USART1)
 #	define DBG_USART	USART1
+#elif defined(USE_USART6)
+#	define DBG_USART	USART6
 #else
 #	define DBG_USART	USART3
 #endif

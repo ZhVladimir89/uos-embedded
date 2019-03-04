@@ -149,6 +149,18 @@ typedef struct
 #define ARM_PULL_UP(n)      (1 << ((n) + 16))  /* подтяжка в питание включена (n = 0..15) */
 #define ARM_PULL_DOWN(n)    (1 << (n))         /* подтяжка в ноль включена (n = 0..15) */
 
+/*
+ * Регистр PD: триггер Шмитта входа или открытый сток выхода
+ */
+#define ARM_PD_SCHMITT(n)   (1 << ((n) + 16))  /* триггер Шмитта включен гистерезис 400 мВ (n = 0..15) */
+#define ARM_PD_OD(n)        (1 << (n))         /* открытый сток (n = 0..15) */
+
+/*
+ * Регистр GFEN: включение входного фильтра импульсов до 10 нс
+ */
+#define ARM_GFEN(n)         (1 << (n))         /* фильтр включен (n = 0..15) */
+
+
 /*------------------------------------------------------
  * External bus
  */
@@ -365,6 +377,49 @@ typedef struct
 #define ARM_TIM1_CLK_EN     (1 << 24)   /* Разрешение тактовой частоты на TIM1 */
 #define ARM_TIM2_CLK_EN     (1 << 25)   /* Разрешение тактовой частоты на TIM2 */
 #define ARM_TIM3_CLK_EN     (1 << 26)   /* Разрешение тактовой частоты на TIM3 */
+
+/*------------------------------------------------------
+ * I2C
+ */
+typedef struct
+{
+    arm_reg_t PRL;          /* Младшая часть предделителя частоты */
+    arm_reg_t PRH;          /* Старшая часть пред делителя частоты */
+    arm_reg_t CTR;          /* Управление контроллером I2C */
+    arm_reg_t RXD;          /* Принятые данные по I2С */
+    arm_reg_t STA;          /* Статус I2C */
+    arm_reg_t TXD;          /* Передаваемые данные по I2C */
+    arm_reg_t CMD;          /* Управление I2С */
+} I2C_t;
+
+#define ARM_I2C             ((I2C_t*) ARM_I2C1_BASE)
+
+/*
+ * Регистр I2C CTR: Управление контроллером I2C
+ */
+#define I2C_EN_I2C          (1 << 7)
+#define I2C_EN_INT          (1 << 6)
+#define I2C_S_I2C           (1 << 5)
+
+/*
+ * Регистр I2C STA: Статус I2C
+ */
+#define I2C_RX_NACK         (1 << 7)
+#define I2C_BUSY            (1 << 6)
+#define I2C_LOST_ARB        (1 << 5)
+#define I2C_TR_PROG         (1 << 1)
+#define I2C_INT             (1 << 0)
+
+/*
+ * Регистр I2C CMD: Управление I2С 
+ */
+#define I2C_START           (1 << 7)
+#define I2C_STOP            (1 << 6)
+#define I2C_RD              (1 << 5)
+#define I2C_WR              (1 << 4)
+#define I2C_NACK            (1 << 3)
+#define I2C_CLR_INT         (1 << 0)
+
 
 /*------------------------------------------------------
  * UART
@@ -1302,7 +1357,7 @@ typedef struct
 #define CAN_STATUS_TEC8         (1 << 12)   /* TEC более 255 */
 #define CAN_STATUS_REC8         (1 << 11)   /* REC более 255 */
 #define CAN_STATUS_BUS_OFF      (1 << 10)   /* Ожидается восстановление шины */
-#define CAN_STATUS_ERR_ACTIVE   (1 << 9)    /* Отсылается флаг пассивной ошибки */
+#define CAN_STATUS_ERR_PASSIVE  (1 << 9)    /* Отсылается флаг пассивной ошибки */
 #define CAN_STATUS_ID_LOWER     (1 << 8)    /* При передаче был проигран арбитраж */
 #define CAN_STATUS_ERR_ACK      (1 << 7)    /* Ошибка подтверждения приема */
 #define CAN_STATUS_ERR_FRAME    (1 << 6)    /* Ошибка формата пакета */
@@ -1761,7 +1816,7 @@ static inline void milandr_init_pin (GPIO_t *gpio, unsigned port, unsigned pin, 
 #define UART2_RX PF0
 #endif
 
-#if (UART2_RX!=PB2) && (UART2_RX!=PD0) && (UART2_RX!=PF0)
+#if (UART2_RX!=PB1) && (UART2_RX!=PD0) && (UART2_RX!=PF0)
 #error "Impossible assignment of UART2_RX pin in CFLAGS of target.cfg"
 #endif
 

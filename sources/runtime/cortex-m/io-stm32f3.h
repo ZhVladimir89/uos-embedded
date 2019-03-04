@@ -509,11 +509,11 @@ typedef struct
 
 // KEYR bits
 #define FLASH_KEY1              0x45670123
-#define FLASH_KEY2              0xCDEF89AF
+#define FLASH_KEY2              0xCDEF89AB
 
 // OPTKEYR bits
 #define FLASH_OPTKEY1           0x45670123
-#define FLASH_OPTKEY2           0xCDEF89AF
+#define FLASH_OPTKEY2           0xCDEF89AB
 
 // SR bits
 #define FLASH_EOP               (1 << 5)
@@ -1155,6 +1155,106 @@ typedef struct
 #define I2C_STOPCF          (1 << 5)
 #define I2C_NACKCF          (1 << 4)
 #define I2C_ADDRCF          (1 << 3)
+
+
+/////////////////////////////////////////
+// SPI
+/////////////////////////////////////////
+typedef struct
+{
+    arm_reg_t CR1;      // Control 1
+    arm_reg_t CR2;      // Control 2
+    arm_reg_t SR;       // Status
+    arm_reg_t DR;       // Data
+    arm_reg_t CRCPR;    // CRC polynomial
+    arm_reg_t RXCRCR;   // RX CRC
+    arm_reg_t TXCRCR;   // TX CRC
+    arm_reg_t I2SCFGR;  // I2S configuration
+    arm_reg_t I2SPR;    // I2S prescaler
+} SPI_t;
+
+#define SPI1    ((SPI_t*) STM_SPI1_BASE)
+#define SPI2    ((SPI_t*) STM_SPI2_I2S2_BASE)
+#define SPI3    ((SPI_t*) STM_SPI3_I2S3_BASE)
+#define SPI4    ((SPI_t*) STM_SPI4_BASE)
+
+
+// SPI_CR1 values
+#define SPI_BIDIMODE        (1 << 15)
+#define SPI_BIDIOE          (1 << 14)
+#define SPI_CRCEN           (1 << 13)
+#define SPI_CRCNEXT         (1 << 12)
+#define SPI_CRCL            (1 << 11)
+#define SPI_RXONLY          (1 << 10)
+#define SPI_SSM             (1 << 9)
+#define SPI_SSI             (1 << 8)
+#define SPI_LSBFIRST        (1 << 7)
+#define SPI_SPE             (1 << 6)
+#define SPI_BR(x)           ((x) << 3)
+#define SPI_MSTR            (1 << 2)
+#define SPI_CPOL            (1 << 1)
+#define SPI_CPHA            (1 << 0)
+
+// SPI_CR2 values
+#define SPI_LDMA_TX         (1 << 14)
+#define SPI_LDMA_RX         (1 << 13)
+#define SPI_FRXTH           (1 << 12)
+#define SPI_DS(n)           (((n) - 1) << 8)
+#define SPI_DS_MASK         (0xF << 8)
+#define SPI_TXEIE           (1 << 7)
+#define SPI_RXNEIE          (1 << 6)
+#define SPI_ERRIE           (1 << 5)
+#define SPI_FRF             (1 << 4)
+#define SPI_NSSP            (1 << 3)
+#define SPI_SSOE            (1 << 2)
+#define SPI_TXDMAEN         (1 << 1)
+#define SPI_RXDMAEN         (1 << 0)
+
+// SPI_SR values
+#define SPI_FTLVL_EMPTY     (0 << 11)
+#define SPI_FTLVL_QUARTER   (1 << 11)
+#define SPI_FTLVL_HALF      (2 << 11)
+#define SPI_FTLVL_FULL      (3 << 11)
+#define SPI_FTLVL_MASK      (3 << 11)
+#define SPI_FRLVL_EMPTY     (0 << 9)
+#define SPI_FRLVL_QUARTER   (1 << 9)
+#define SPI_FRLVL_HALF      (2 << 9)
+#define SPI_FRLVL_FULL      (3 << 9)
+#define SPI_FRLVL_MASK      (3 << 9)
+#define SPI_FRE             (1 << 8)
+#define SPI_BSY             (1 << 7)
+#define SPI_OVR             (1 << 6)
+#define SPI_MODF            (1 << 5)
+#define SPI_CRCERR          (1 << 4)
+#define SPI_UDR             (1 << 3)
+#define SPI_CHSIDE          (1 << 2)
+#define SPI_TXE             (1 << 1)
+#define SPI_RXNE            (1 << 0)
+
+// SPI_I2SCFGR values
+#define SPI_I2SMOD              (1 << 11)
+#define SPI_I2SE                (1 << 10)
+#define SPI_I2SCFG_SLAVE_TX     (0 << 8)
+#define SPI_I2SCFG_SLAVE_RX     (1 << 8)
+#define SPI_I2SCFG_MASTER_TX    (2 << 8)
+#define SPI_I2SCFG_MASTER_RX    (3 << 8)
+#define SPI_PCMSYNC             (1 << 7)
+#define SPI_I2SSTD_PHILIPS      (0 << 4)
+#define SPI_I2SSTD_MSB_JUST     (1 << 4)
+#define SPI_I2SSTD_LSB_JUST     (2 << 4)
+#define SPI_I2SSTD_PCM          (3 << 4)
+#define SPI_CKPOL               (1 << 3)
+#define SPI_DATLEN_16BIT        (0 << 1)
+#define SPI_DATLEN_24BIT        (1 << 1)
+#define SPI_DATLEN_32BIT        (2 << 1)
+#define SPI_CHLEN_16BIT         (0 << 0)
+#define SPI_CHLEN_32BIT         (1 << 0)
+
+// SPI_I2SPR values
+#define SPI_MCKOE           (1 << 9)
+#define SPI_ODD             (1 << 8)
+#define SPI_I2SDIV(x)       (x)
+
 
 /////////////////////////////////////////
 // DMA

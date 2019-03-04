@@ -154,15 +154,8 @@ static void test_milstd_bc_main()
 			read_idx = (read_idx+1>=STATUS_ITEMS_SIZE?0:read_idx+1);
 		}
 
-		if (!mem_queue_is_empty(&mil.urgent_rxq)) {
-			if (!fill_buffer(&mil.urgent_rxq)) {
-				debug_printf("Error gettinng urgent rx data\n");
-		    	for(;;);
-			}
-		}
-
-		if (!mem_queue_is_empty(&mil.cyclogram_rxq)) {
-			if (!fill_buffer(&mil.cyclogram_rxq)) {
+		if (!mem_queue_is_empty(&mil.bc_rxq)) {
+			if (!fill_buffer(&mil.bc_rxq)) {
 				debug_printf("Error gettinng rx data\n");
 				for(;;);
 			}

@@ -47,6 +47,8 @@
 
 #define MIL_DATA_LENGTH     		1024
 
+enum { MIL_SINGLE_MSG_COUNT = 64 };
+
 //! Режимы передачи данных между узлами MIL-STD 1553.
 typedef enum
 {

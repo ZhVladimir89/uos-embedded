@@ -7,6 +7,9 @@
 #define FLASH_ERR_IO            -3
 #define FLASH_ERR_INVAL_SIZE    -4
 #define FLASH_ERR_BAD_ANSWER    -5
+#define FLASH_ERR_ERASE         -6
+#define FLASH_ERR_PROGRAM       -7
+#define FLASH_ERR_NOT_ALIGNED   -8
 
 typedef struct _flashif_t flashif_t;
 
@@ -132,6 +135,14 @@ unsigned flash_min_address(flashif_t *flash)
 {
     if (flash->min_address)
         return flash->min_address(flash);
+    else return FLASH_ERR_NOT_SUPP;
+}
+
+static inline __attribute__((always_inline)) 
+unsigned flash_max_address(flashif_t *flash)
+{
+    if (flash->min_address)
+        return flash->min_address(flash) + flash_size(flash);
     else return FLASH_ERR_NOT_SUPP;
 }
 

@@ -62,7 +62,7 @@ static int stm32l1_connect(flashif_t *flash)
 	flash->nb_sectors = sf->size / 256;
 	
 	flash->direct_read = 1;
-	flash->data_align = 1;
+	flash->data_align = 4;
 	
 #ifndef STM32L_PROG_FLASH_DISABLE_THREAD_SAFE
 	_UC(uos) mutex_unlock(&flash->lock);
@@ -171,6 +171,15 @@ static int stm32l1_flush(flashif_t *flash)
     return FLASH_ERR_OK;
 }
 
+static int stm32l1_needs_explicit_erase(flashif_t *flash)
+{
+#ifdef STM32L_PROG_FLASH_NO_SRAM
+    return 0;
+#else
+    return 1;
+#endif
+}
+
 void stm32l1_prog_flash_init(stm32l1_prog_flash_t *m, uint32_t start_addr, uint32_t size)
 {
     flashif_t *f = &m->flashif;
@@ -185,6 +194,7 @@ void stm32l1_prog_flash_init(stm32l1_prog_flash_t *m, uint32_t start_addr, uint3
     f->read = stm32l1_read;
     f->min_address = stm32l1_min_address;
     f->flush = stm32l1_flush;
+    f->needs_explicit_erase = stm32l1_needs_explicit_erase;
     
     // Copy function code to SRAM
 	unsigned func_offset;

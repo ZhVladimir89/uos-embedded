@@ -136,6 +136,8 @@
 #define THERMO_ERR_IO           -1
 // Неверный параметр
 #define THERMO_ERR_BAD_PARAM    -2
+// Выход температуры за допустимые границы
+#define THERMO_ERR_BAD_VALUE    -3
 
 
 typedef struct _thermoif_t thermoif_t;

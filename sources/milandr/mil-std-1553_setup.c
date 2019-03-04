@@ -23,7 +23,7 @@ static bool_t timer_handler(void *arg)
     mil->operation_time += mil->period_ms;
 #endif
 
-    if (mil->urgent_desc.raw != 0) {
+    if (mil->single_cnt > 0 && mil->single_indx == 0) {
         //debug_printf("urgent_desc ");
         //int i;
         //int wc = (mil->urgent_desc.words_count==0?32:mil->urgent_desc.words_count);
@@ -31,8 +31,8 @@ static bool_t timer_handler(void *arg)
         //  debug_printf("%04x ", mil->urgent_data[i]);
         //}
         //debug_printf("\n");
-        mil->urgent_desc.reserve = 1;       // Признак того, что идёт передача вне очереди
-        start_slot(mil, mil->urgent_desc, mil->urgent_data);
+        start_slot(mil, *mil->single_slots, mil->single_data);
+        ++mil->single_indx;
     } else if (mil->cur_slot == mil->cyclogram) {
         if (mil->cur_slot != 0) {
             start_slot(mil, mil->cur_slot->desc, mil->cur_slot->data);
@@ -123,9 +123,9 @@ static int mil_start(mil1553if_t *_mil)
 
         mil->cur_slot = mil->cyclogram;
 
-        if (mil->urgent_desc.raw != 0) {
-            mil->urgent_desc.reserve = 1;   // Признак того, что идёт передача вне очереди
-            start_slot(mil, mil->urgent_desc, mil->urgent_data);
+        if (mil->single_cnt > 0 && mil->single_indx == 0) {
+            start_slot(mil, *mil->single_slots, mil->single_data);
+            ++mil->single_indx;
         } else {
             if (mil->cur_slot != 0) {
                 start_slot(mil, mil->cur_slot->desc, mil->cur_slot->data);
@@ -160,24 +160,8 @@ static int mil_stop(mil1553if_t *_mil)
         mil->tim_reg->TIM_IE = 0;
         mil->tim_reg->TIM_CNTRL = 0;
     }
-    
-    while (!mem_queue_is_empty(&mil->cyclogram_rxq)) {
-        void *que_elem = 0;
-        mem_queue_get(&mil->cyclogram_rxq, &que_elem);
-        mem_free(que_elem);
-    }
 
-    while (!mem_queue_is_empty(&mil->urgent_rxq)) {
-            void *que_elem = 0;
-            mem_queue_get(&mil->urgent_rxq, &que_elem);
-            mem_free(que_elem);
-        }
-
-    //while (!mem_queue_is_empty (&mil->rt_rxq)) {
-    //      void *que_elem = 0;
-    //      mem_queue_get(&mil->rt_rxq, &que_elem);
-    //      mem_free(que_elem);
-    //}
+    mem_queue_clear(&mil->bc_rxq);
 
     memset(status_array, 0, sizeof(status_array));
     read_idx = 0;
@@ -509,16 +493,20 @@ static int mil_bc_urgent_send(mil1553if_t *_mil, mil_slot_desc_t descr, void *da
     milandr_mil1553_t *mil = (milandr_mil1553_t *)_mil;
 
     mil_lock(_mil);
-    mil->urgent_desc = descr;
-    mil->urgent_desc.reserve = 0;
+    if (mil->single_indx == mil->single_cnt)
+        mil->single_indx = mil->single_cnt = 0;
+    if (mil->single_cnt >= MIL_SINGLE_MSG_COUNT)
+        return MIL_ERR_NO_MEM;
+    mil->single_slots[mil->single_cnt] = descr;
     if (descr.command.req_pattern == 0 || descr.command.req_pattern == 0x1f) {
         // Команда управления
     } else {
         if (descr.transmit_mode == MIL_SLOT_BC_RT) {
-            int wc = (descr.words_count == 0 ? 32 : descr.words_count);
-            memcpy(mil->urgent_data, data, 2*wc);
+            int wc = (descr.words_count == 0 ? MIL_SUBADDR_WORDS_COUNT : descr.words_count);
+            memcpy(mil->single_data + mil->single_cnt * MIL_SUBADDR_WORDS_COUNT, data, sizeof(uint16_t) * wc);
         }
     }
+    ++mil->single_cnt;
     mil_unlock(_mil);
     return MIL_ERR_OK;
 }
@@ -557,50 +545,11 @@ static int mil_bc_ordinary_send(mil1553if_t *_mil, int slot_index, void *data)
 
 static mutex_t status_lock;     // формальный mutex, не должен запрещатся
 
-void mil_rt_send(mil1553if_t *_mil, int subaddr, void *data, int nb_words)
-{
-    milandr_mil1553_t *mil = (milandr_mil1553_t *)_mil;
-    mil->txbuf[subaddr].busy = 1;
-    // nb_words умножаем на 2 для получения реального размера в байтах
-    // результат умножаем на 2 из за прореживания данных в памяти процессора
-    // memcpy(mil->txbuf[subaddr].data, data, nb_words * 4);
-    uint32_t *src = data;
-    uint32_t *dst = mil->txbuf[subaddr].data;
-    int i;
-    for(i=0;i<nb_words;i++) {
-        *dst++ = *src++;
-    }
-    mil->txbuf[subaddr].nb_words = nb_words;
-    mil->txbuf[subaddr].busy = 0;
-}
-
-void mil_rt_receive(mil1553if_t *_mil, int subaddr, void *data, int *nb_words)
-{
-    milandr_mil1553_t *mil = (milandr_mil1553_t *)_mil;
-    mil->rxbuf[subaddr].busy = 1;
-    *nb_words = mil->rxbuf[subaddr].nb_words;
-    // nb_words умножаем на 2 для получения реального размера в байтах
-    // результат умножаем на 2 из за прореживания данных в памяти процессора
-    // memcpy(data, mil->rxbuf[subaddr].data, *nb_words * 4);
-    uint32_t *src = mil->rxbuf[subaddr].data;
-    uint32_t *dst = data;
-    int i;
-    for(i=0;i<*nb_words;i++) {
-        *dst++ = *src++;
-    }
-    mil->rxbuf[subaddr].busy = 0;
-}
-
 void mil_rt_send_16(mil1553if_t *_mil, int subaddr, void *data, int nb_words)
 {
     milandr_mil1553_t *mil = (milandr_mil1553_t *)_mil;
     mil->txbuf[subaddr].busy = 1;
-    uint16_t *src = data;
-    volatile uint32_t *dst = mil->txbuf[subaddr].data;
-    int i;
-    for(i=0;i<nb_words;i++) {
-        *dst++ = *src++;
-    }
+    memcpy(mil->txbuf[subaddr].data, data, nb_words * sizeof(uint16_t));
     mil->txbuf[subaddr].nb_words = nb_words;
     mil->txbuf[subaddr].busy = 0;
 }
@@ -610,12 +559,7 @@ void mil_rt_receive_16(mil1553if_t *_mil, int subaddr, void *data, int *nb_words
     milandr_mil1553_t *mil = (milandr_mil1553_t *)_mil;
     mil->rxbuf[subaddr].busy = 1;
     *nb_words = mil->rxbuf[subaddr].nb_words;
-    int i;
-    uint16_t *dst = data;
-    uint32_t *src = mil->rxbuf[subaddr].data;
-    for(i=0;i<*nb_words;i++) {
-        *dst++ = (*src++) & 0xffff;
-    }
+    memcpy(data, mil->rxbuf[subaddr].data, *nb_words * sizeof(uint16_t));
     mil->rxbuf[subaddr].busy = 0;
 }
 
@@ -648,11 +592,9 @@ void milandr_mil1553_init(milandr_mil1553_t *_mil, int port, mem_pool_t *pool, u
 
     mil->pool = pool;
     if (nb_rxq_msg) {
-        mem_queue_init(&mil->cyclogram_rxq, pool, nb_rxq_msg);
-        mem_queue_init(&mil->urgent_rxq, pool, nb_rxq_msg);
-//        mem_queue_init(&mil->rt_rxq, pool, nb_rxq_msg);
+        mem_queue_init(&mil->bc_rxq, pool, nb_rxq_msg);
     }
-    
+
     mil->tim_reg = timer;
     if (timer == ARM_TIMER1) {
         mil->tim_irq = TIMER1_IRQn;
@@ -677,7 +619,12 @@ void milandr_mil1553_init(milandr_mil1553_t *_mil, int port, mem_pool_t *pool, u
     mil->is_running = 0;
     mil->mode = MIL_MODE_UNDEFINED;
     mil->period_ms = 0;
-    
+
+    // инициализация структур данных для однократных сообщений
+    mil->single_cnt = 0;
+    mil->single_indx = 0;
+    memset(mil->single_slots, 0, sizeof(mil->single_slots));
+
     mil->milif.set_mode = mil_set_mode;
     mil->milif.start = mil_start;
     mil->milif.stop = mil_stop;
@@ -690,7 +637,6 @@ void milandr_mil1553_init(milandr_mil1553_t *_mil, int port, mem_pool_t *pool, u
     mil->milif.bc_set_period = mil_bc_set_period;
     mil->milif.bc_urgent_send = mil_bc_urgent_send;
     mil->milif.bc_ordinary_send = mil_bc_ordinary_send;
-
 
     if (mil->irq == MIL_STD_1553B1_IRQn) {
         // IRQ 1 (MIL_STD_1553B1_IRQn) никогда не запрещается
