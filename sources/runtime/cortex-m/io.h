@@ -24,6 +24,9 @@
 #ifdef ARM_1986BE1
 #   include <runtime/cortex-m/io-1986ve1.h>
 #endif
+#ifdef ARM_STM32F1
+#   include <runtime/cortex-m/io-stm32f1.h>
+#endif
 #ifdef ARM_STM32F2
 #   include <runtime/cortex-m/io-stm32f2.h>
 #endif

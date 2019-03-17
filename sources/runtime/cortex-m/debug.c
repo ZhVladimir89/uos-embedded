@@ -23,7 +23,9 @@
 
 bool_t debug_onlcr = 1;
 
+#if !defined(ARM_STM32F1)  // Пока не поддерживается
 static int debug_char = -1;
+#endif
 
 static void (*hook) (void *arg, short c);
 static void *hook_arg;
@@ -68,6 +70,7 @@ static inline short arch_getchar()
 
 #endif // defined (ARM_1986BE1) || defined (ARM_1986BE9)
 
+#if !defined(ARM_STM32F1)
 
 #if defined(ARM_STM32F2) || defined(ARM_STM32F4) || defined(ARM_STM32L1)
 
@@ -237,3 +240,33 @@ debug_puts (const char *p)
 		debug_putchar (0, *p);
 	arm_intr_restore (x);
 }
+
+#else
+
+int
+debug_peekchar (void)
+{
+    return 0;
+}
+
+void
+debug_putchar (void *arg, short c)
+{
+  return;
+}
+
+unsigned short
+debug_getchar (void)
+{
+  return 0;
+}
+
+void
+debug_puts (const char *p)
+{
+  return;
+}
+
+#endif /*stm32f1*/
+
+
