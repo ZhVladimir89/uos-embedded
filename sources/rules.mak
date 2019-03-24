@@ -42,10 +42,10 @@ always:
 
 .c.elf:
 		@[ -d .deps ] || mkdir .deps
-		$(CC) $(LDFLAGS) $(CFLAGS) $(DEPFLAGS) $< $(LIBS) -o $@
+		$(CC) $(LDFLAGS) $(CFLAGS) $(DEPFLAGS) $(USER_OBJS) $< $(LIBS) -o $@
 
 .o.elf:
-		$(CC) $(LDFLAGS) $< $(LIBS) -o $@
+		$(CC) $(LDFLAGS) $(USER_OBJS) $< $(LIBS) -o $@
 
 .fl.cxx .fl.h:
 		fluid -c $<

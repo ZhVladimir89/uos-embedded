@@ -1,5 +1,5 @@
 /*
- * Startup initialization and exception handlers for STM32L1xx family.
+ * Startup initialization and exception handlers for STM32F1xx family.
  *
  * Copyright (C) 2019 Vladimir Zhuravlev, <vladimir.rgrtu@mail.ru>
  *

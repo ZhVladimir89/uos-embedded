@@ -7966,6 +7966,7 @@ typedef struct
 
 #define PIN_SET(PORT,PIN)                    PORT->BSRR=(1<<PIN);
 #define PIN_RESET(PORT,PIN)                  PORT->BSRR=(1<<(16+PIN));
+#define PIN_IS_SET(PORT,PIN)                 (PORT->IDR&(1<<PIN))
 #define PIN_INVERT(PORT,PIN)                 if(PORT->IDR&(1<<PIN)){PORT->BSRR=(1<<(16+PIN));}else{PORT->BSRR=(1<<PIN);}
 #define RESET_GPIO(PORT)                     PORT->CRL = 0; PORT->CRH = 0; PORT->ODR=0; PORT->IDR=0
 
